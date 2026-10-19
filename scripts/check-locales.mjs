@@ -127,6 +127,8 @@ const UNTRANSLATED_ALLOWLIST = new Set([
   'settings.dvr.extraInputArgsPlaceholder', 'settings.dvr.extraOutputArgsPlaceholder',
   // "HLS" is the name of the format, not a translatable word
   'dvr.streamTypeHls',
+  // "TVBox" is a brand name, identical in every locale
+  'nav.items.tvbox',
   // French calls a playlist's EPG source "source" too ("Source : {{name}}"), so the
   // Feed/Source grouping labels legitimately share one word there
   'fr:epg.matchesGroupSource',

@@ -197,6 +197,67 @@ export function normalizeCategories(data: any): TvboxCategory[] {
 }
 
 // ---------------------------------------------------------------------------
+// Type-1 direct JSON API sites (AppleCMS/Maccms style, no spider needed)
+//   home:     GET {api}?ac=home            -> {"class":[...]} (some APIs: GET {api})
+//   category: GET {api}?ac=videolist&t={tid}&pg={pg}
+//   detail:   GET {api}?ac=detail&ids={id}
+//   search:   GET {api}?ac=videolist&wd={kw}&pg={pg}
+// ---------------------------------------------------------------------------
+
+function type1Url(api: string, params: Record<string, string>): string {
+  const base = api.includes('?') ? `${api}&` : `${api}?`;
+  const qs = Object.entries(params)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join('&');
+  return `${base}${qs}`;
+}
+
+/** Fetch categories for a type-1 site. */
+export async function type1Home(api: string): Promise<TvboxCategory[]> {
+  // Try ?ac=home first; fall back to bare api (some return class list directly).
+  let data: any = null;
+  try {
+    data = await fetchJson(type1Url(api, { ac: 'home' }), undefined, 20000);
+  } catch {
+    data = null;
+  }
+  if (!data?.class) {
+    try {
+      data = await fetchJson(api, undefined, 20000);
+    } catch {
+      data = null;
+    }
+  }
+  return normalizeCategories(data);
+}
+
+/** Fetch a video list page for a type-1 site. */
+export async function type1Category(
+  api: string,
+  tid: string,
+  pg: number,
+): Promise<{ videos: TvboxVideo[]; page: number; pagecount: number }> {
+  const data = await fetchJson(type1Url(api, { ac: 'videolist', t: tid, pg: String(pg) }), undefined, 20000);
+  return normalizeVideoList(data);
+}
+
+/** Fetch detail for a type-1 site. */
+export async function type1Detail(api: string, id: string): Promise<TvboxDetail | null> {
+  const data = await fetchJson(type1Url(api, { ac: 'detail', ids: id }), undefined, 20000);
+  return normalizeDetail(data);
+}
+
+/** Search a type-1 site. */
+export async function type1Search(
+  api: string,
+  keyword: string,
+  pg = 1,
+): Promise<{ videos: TvboxVideo[]; page: number; pagecount: number }> {
+  const data = await fetchJson(type1Url(api, { ac: 'videolist', wd: keyword, pg: String(pg) }), undefined, 20000);
+  return normalizeVideoList(data);
+}
+
+// ---------------------------------------------------------------------------
 // Local persistence for user-added config URLs (small data: localStorage is fine)
 // ---------------------------------------------------------------------------
 

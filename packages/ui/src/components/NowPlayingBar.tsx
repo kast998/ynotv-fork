@@ -783,7 +783,7 @@ export function NowPlayingBar({
 
                 <span className="npb-clean-time-remaining">
                   {isVod || isCatchup
-                    ? `-${formatTime(vodRemaining)}`
+                    ? `? formatTime(position)`
                     : timeshiftState
                     ? (timeshiftState.behindLive < 5 ? 'LIVE' : `-${formatTime(timeshiftState.behindLive)}`)
                     : (timeRemaining ? `-${timeRemaining}` : 'LIVE')}
@@ -1277,7 +1277,7 @@ export function NowPlayingBar({
                       </div>
                     )}
                   </div>
-                  <span className="npb-time-remaining">-{formatTime(vodRemaining)}</span>
+                  <span className="npb-time-remaining">-{formatTime(position)}</span>
 
                   {isCatchup && onGoToLive && (
                     <button

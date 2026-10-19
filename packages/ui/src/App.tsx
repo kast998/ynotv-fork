@@ -138,6 +138,7 @@ import { AdvancedSearchModal, type AdvancedSearchConfig } from './components/Adv
 import { ChannelProbeModal } from './components/ChannelProbeModal';
 import { StremioPage } from './components/stremio/StremioPage';import { NuvioPage } from './components/nuvio/NuvioPage';
 import { JellyfinPage } from './components/JellyfinPage';
+import { TVBoxPage } from './components/TVBoxPage';
 import { useStremioAddonStore } from './stores/stremioAddonStore';
 import { useStremioWatchStore } from './stores/stremioWatchStore';
 import { useStremioAuthStore } from './stores/stremioAuthStore';
@@ -6071,6 +6072,25 @@ function useTmdbPresencePoster(
                   <span>{i18n.t('nav:items.jellyfin')}</span>
                 </button>
               )}
+
+              {!navHiddenTabs.includes('tvbox') && (
+                <button
+                  className={`segmented-btn ${activeView === 'tvbox' ? 'active' : ''}`}
+                  onClick={() => {
+                    setCategoriesOpen(false);
+                    setActiveView(activeView === 'tvbox' ? 'none' : 'tvbox');
+                  }}
+                  title={i18n.t('nav:items.tvbox')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="14" rx="2" />
+                    <path d="M8 22h8" />
+                    <path d="M12 18v4" />
+                    <path d="m10 9 5 3-5 3z" />
+                  </svg>
+                  <span>{i18n.t('nav:items.tvbox')}</span>
+                </button>
+              )}
             </div>
 
             <div className="unified-divider"></div>
@@ -7362,6 +7382,17 @@ function useTmdbPresencePoster(
         />
       </TransitionView>
       )}
+
+      {/* TVBox Page (spider sidecar on localhost) */}
+      <TransitionView visible={activeView === 'tvbox'}>
+        <TVBoxPage
+          onPlay={(info, targetMode) => {
+            setPlaybackSourceView('movies');
+            handlePlayVodWrapper(info, () => setActiveView('none'), targetMode);
+          }}
+          onClose={() => setActiveView('none')}
+        />
+      </TransitionView>
 
       {/* Stremio Page */}
       <TransitionView visible={activeView === 'stremio'}>

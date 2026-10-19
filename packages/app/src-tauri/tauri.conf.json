@@ -46,7 +46,11 @@
       "bin/ffmpeg",
       "bin/yt-dlp"
     ],
-    "resources": [],
+    "resources": [
+      "spider-sidecar/classes",
+      "spider-sidecar/lib",
+      "spider-sidecar/spiders"
+    ],
     "windows": {
       "nsis": {
         "installMode": "currentUser"

@@ -13,6 +13,10 @@ import {
   normalizeCategories,
   normalizeVideoList,
   normalizeDetail,
+  type1Home,
+  type1Category,
+  type1Detail,
+  type1Search,
   loadConfigSources,
   saveConfigSources,
 } from '../services/tvbox';
@@ -138,11 +142,11 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
   }, [configs]);
 
   const compatibleSites = useMemo(
-    () => sites.filter((s) => resolveSpider(s, spiderSet)),
+    () => sites.filter((s) => s.type === 1 || resolveSpider(s, spiderSet)),
     [sites, spiderSet],
   );
   const incompatibleSites = useMemo(
-    () => sites.filter((s) => !resolveSpider(s, spiderSet)),
+    () => sites.filter((s) => s.type !== 1 && !resolveSpider(s, spiderSet)),
     [sites, spiderSet],
   );
 
@@ -296,9 +300,9 @@ function SiteList({ loading, compatible, incompatible, onSelect }: {
           <h2 className="tvbox-section-title">需要爬虫（sidecar 暂无对应爬虫）</h2>
           <div className="tvbox-grid">
             {incompatible.map((s) => (
-              <div key={`${s.configUrl}::${s.key}`} className="tvbox-card tvbox-card--disabled" title={s.type === 1 ? '直连站，v1 暂不支持' : `缺少爬虫: ${s.api}`}>
+              <div key={`${s.configUrl}::${s.key}`} className="tvbox-card tvbox-card--disabled" title={`缺少爬虫: ${s.api}`}>
                 <span className="tvbox-card-name">{s.name}</span>
-                <span className="tvbox-card-meta">{s.type === 1 ? '直连站 · 暂不支持' : `缺少爬虫`}</span>
+                <span className="tvbox-card-meta">缺少爬虫</span>
               </div>
             ))}
           </div>
@@ -326,9 +330,11 @@ function SiteHome({ site, spiderClass, onBack, onOpenCategory, onSearch }: {
     let alive = true;
     (async () => {
       try {
-        const data = await invokeSpider(spiderClass, 'homeContent', [true]);
+        const cats = site.type === 1
+          ? await type1Home(site.api)
+          : normalizeCategories(await invokeSpider(spiderClass, 'homeContent', [true]));
         if (!alive) return;
-        setCats(normalizeCategories(data));
+        setCats(cats);
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -336,7 +342,7 @@ function SiteHome({ site, spiderClass, onBack, onOpenCategory, onSearch }: {
       }
     })();
     return () => { alive = false; };
-  }, [spiderClass]);
+  }, [spiderClass, site]);
 
   return (
     <div>
@@ -407,9 +413,10 @@ function CategoryView({ site, spiderClass, cat, page, onBack, onPage, onOpenVide
     setError(null);
     (async () => {
       try {
-        const data = await invokeSpider(spiderClass, 'categoryContent', [cat.type_id, String(page), false, {}]);
+        const n = site.type === 1
+          ? await type1Category(site.api, cat.type_id, page)
+          : normalizeVideoList(await invokeSpider(spiderClass, 'categoryContent', [cat.type_id, String(page), false, {}]));
         if (!alive) return;
-        const n = normalizeVideoList(data);
         setVideos(n.videos);
         setPagecount(Math.max(1, n.pagecount));
       } catch (e) {
@@ -419,7 +426,7 @@ function CategoryView({ site, spiderClass, cat, page, onBack, onPage, onOpenVide
       }
     })();
     return () => { alive = false; };
-  }, [spiderClass, cat.type_id, page]);
+  }, [spiderClass, site, cat.type_id, page]);
 
   return (
     <div>
@@ -463,9 +470,10 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
     let alive = true;
     (async () => {
       try {
-        const data = await invokeSpider(spiderClass, 'detailContent', [[video.vod_id]]);
+        const d = site.type === 1
+          ? await type1Detail(site.api, video.vod_id)
+          : normalizeDetail(await invokeSpider(spiderClass, 'detailContent', [[video.vod_id]]));
         if (!alive) return;
-        const d = normalizeDetail(data);
         if (!d) throw new Error('详情为空');
         // fill in name/pic from the list card when detail lacks them
         if (!d.vod_name) d.vod_name = video.vod_name;
@@ -478,7 +486,7 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
       }
     })();
     return () => { alive = false; };
-  }, [spiderClass, video.vod_id]);
+  }, [spiderClass, site, video.vod_id]);
 
   const playEpisode = useCallback(async (idx: number) => {
     if (!detail || playingIdx !== null) return;
@@ -486,10 +494,14 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
     if (!ep) return;
     setPlayingIdx(idx);
     try {
-      // Resolve the real play URL through the spider.
-      const data = await invokeSpider(spiderClass, 'playerContent', ['', ep.url, []]);
-      const url = typeof data?.url === 'string' && data.url ? data.url : ep.url;
-      const headers = data?.header && typeof data.header === 'object' ? data.header : undefined;
+      // Type-1: episode URL is already direct. Spider: resolve via playerContent.
+      let url = ep.url;
+      let headers: Record<string, string> | undefined;
+      if (site.type !== 1) {
+        const data = await invokeSpider(spiderClass, 'playerContent', ['', ep.url, []]);
+        if (typeof data?.url === 'string' && data.url) url = data.url;
+        if (data?.header && typeof data.header === 'object') headers = data.header;
+      }
       const info: VodPlayInfo = {
         url,
         title: detail.vod_name || video.vod_name,
@@ -510,7 +522,7 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
     } finally {
       setPlayingIdx(null);
     }
-  }, [detail, playingIdx, spiderClass, site.key, video.vod_name, onPlay]);
+  }, [detail, playingIdx, spiderClass, site, video.vod_name, onPlay]);
 
   return (
     <div>
@@ -567,9 +579,11 @@ function SearchView({ site, spiderClass, query, onBack, onOpenVideo }: {
     let alive = true;
     (async () => {
       try {
-        const data = await invokeSpider(spiderClass, 'searchContent', [query, false]);
+        const videos = site.type === 1
+          ? (await type1Search(site.api, query)).videos
+          : normalizeVideoList(await invokeSpider(spiderClass, 'searchContent', [query, false])).videos;
         if (!alive) return;
-        setVideos(normalizeVideoList(data).videos);
+        setVideos(videos);
       } catch (e) {
         if (alive) setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -577,7 +591,7 @@ function SearchView({ site, spiderClass, query, onBack, onOpenVideo }: {
       }
     })();
     return () => { alive = false; };
-  }, [spiderClass, query]);
+  }, [spiderClass, site, query]);
 
   return (
     <div>

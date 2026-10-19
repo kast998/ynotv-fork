@@ -331,6 +331,7 @@ mod raw_hid_gamepad;
 mod web_server;
 mod jellyfin_web;
 mod icon_switcher;
+mod spider_sidecar;
 // Exact DASH time/index model shared by the C0 tests and experimental C5 session.
 mod dash_timeline;
 mod dash_abr;
@@ -5574,6 +5575,12 @@ pub fn run() {
         .setup(|app| {
             app.manage(WindowStateTracker::default());
             app.manage(jellyfin_web::JellyfinEmbedState::default());
+            app.manage(spider_sidecar::SpiderSidecarState::default());
+
+            // Start the TVBox spider sidecar (Java service on 127.0.0.1:17890).
+            // Runs in the background; the TVBox UI shows a "not started" hint
+            // if no JVM is found.
+            spider_sidecar::start_spider_sidecar(app.handle());
 
             // Show the main window immediately and restore its saved position
             // BEFORE any potentially slow initialization (DVR database open /
@@ -6029,6 +6036,10 @@ pub fn run() {
             match event {
                 RunEvent::ExitRequested { api, .. } => {
                     handle_exit_requested(app_handle, api);
+                }
+                RunEvent::Exit => {
+                    // Event loop is actually exiting: stop the spider sidecar.
+                    spider_sidecar::stop_spider_sidecar(app_handle);
                 }
                 _ => {}
             }

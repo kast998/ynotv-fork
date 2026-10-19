@@ -1,0 +1,376 @@
+/* TVBoxPage.css — TVBox section styles, dark theme matching the app */
+
+.tvbox-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary, #141414);
+  color: var(--text-primary, #e8e8e8);
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+.tvbox-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tvbox-back {
+  background: transparent;
+  border: 1px solid var(--border-color, #333);
+  border-radius: 8px;
+  color: inherit;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.tvbox-back:hover {
+  background: var(--bg-hover, #222);
+}
+
+.tvbox-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.tvbox-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, #333);
+  cursor: pointer;
+  user-select: none;
+}
+
+.tvbox-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #888;
+}
+
+.tvbox-status--online .tvbox-status-dot { background: #4caf50; }
+.tvbox-status--offline .tvbox-status-dot { background: #f44336; }
+.tvbox-status--checking .tvbox-status-dot { background: #ff9800; animation: tvbox-pulse 1s infinite; }
+
+@keyframes tvbox-pulse {
+  50% { opacity: 0.4; }
+}
+
+.tvbox-manage-btn {
+  margin-left: auto;
+  background: var(--bg-secondary, #1e1e1e);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 8px;
+  color: inherit;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.tvbox-manage-btn:hover {
+  background: var(--bg-hover, #2a2a2a);
+}
+
+.tvbox-warning,
+.tvbox-error {
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.tvbox-warning {
+  background: rgba(255, 152, 0, 0.12);
+  border: 1px solid rgba(255, 152, 0, 0.4);
+  color: #ffb74d;
+}
+
+.tvbox-error {
+  background: rgba(244, 67, 54, 0.12);
+  border: 1px solid rgba(244, 67, 54, 0.4);
+  color: #ef9a9a;
+}
+
+.tvbox-manager {
+  border: 1px solid var(--border-color, #333);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: var(--bg-secondary, #1a1a1a);
+}
+
+.tvbox-add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tvbox-input {
+  flex: 1;
+  background: var(--bg-primary, #141414);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 8px;
+  color: inherit;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.tvbox-input:focus {
+  outline: none;
+  border-color: var(--accent, #4a9eff);
+}
+
+.tvbox-btn {
+  background: var(--bg-tertiary, #2a2a2a);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 8px;
+  color: inherit;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tvbox-btn:hover:not(:disabled) {
+  background: var(--bg-hover, #333);
+}
+
+.tvbox-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.tvbox-btn--danger {
+  color: #ef9a9a;
+  border-color: rgba(244, 67, 54, 0.4);
+}
+
+.tvbox-hint {
+  font-size: 12px;
+  color: var(--text-secondary, #999);
+  margin: 4px 0;
+}
+
+.tvbox-config-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.tvbox-config-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border-color, #2a2a2a);
+  font-size: 12px;
+}
+
+.tvbox-config-url {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary, #aaa);
+}
+
+.tvbox-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 16px 0 10px;
+  color: var(--text-secondary, #bbb);
+}
+
+.tvbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.tvbox-card {
+  background: var(--bg-secondary, #1e1e1e);
+  border: 1px solid var(--border-color, #2a2a2a);
+  border-radius: 10px;
+  padding: 14px 10px;
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  text-align: center;
+}
+
+.tvbox-card:hover {
+  border-color: var(--accent, #4a9eff);
+}
+
+.tvbox-card--disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.tvbox-card--disabled:hover {
+  border-color: var(--border-color, #2a2a2a);
+}
+
+.tvbox-card-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tvbox-card-meta {
+  font-size: 11px;
+  color: var(--text-secondary, #888);
+}
+
+.tvbox-subheader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tvbox-subheader .tvbox-section-title {
+  margin: 0;
+  flex: 1;
+}
+
+.tvbox-search-form {
+  display: flex;
+}
+
+.tvbox-search-form .tvbox-input {
+  width: 220px;
+}
+
+.tvbox-loading,
+.tvbox-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary, #888);
+  font-size: 14px;
+}
+
+.tvbox-video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.tvbox-video-card {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+}
+
+.tvbox-poster {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--bg-secondary, #1e1e1e);
+  display: block;
+}
+
+.tvbox-poster--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #666);
+  font-size: 12px;
+}
+
+.tvbox-video-card:hover .tvbox-poster {
+  outline: 2px solid var(--accent, #4a9eff);
+}
+
+.tvbox-video-name {
+  font-size: 13px;
+  margin-top: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tvbox-video-remarks {
+  font-size: 11px;
+  color: var(--text-secondary, #888);
+}
+
+.tvbox-pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tvbox-page-label {
+  font-size: 12px;
+  color: var(--text-secondary, #999);
+}
+
+.tvbox-detail {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.tvbox-detail-poster {
+  width: 200px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.tvbox-detail-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tvbox-detail-body h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.tvbox-detail-remarks {
+  font-size: 13px;
+  color: var(--text-secondary, #aaa);
+  margin: 0 0 12px;
+}
+
+.tvbox-episodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tvbox-episode-btn {
+  background: var(--bg-secondary, #1e1e1e);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 8px;
+  color: inherit;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 64px;
+}
+
+.tvbox-episode-btn:hover:not(:disabled) {
+  border-color: var(--accent, #4a9eff);
+}
+
+.tvbox-episode-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

@@ -5,7 +5,10 @@
       "native-dash-libmpv/*.dll": ".",
       "native-dash-libmpv/cenc_component_producer.exe": "cenc_component_producer.exe",
       "bin/vulkan-1.dll": "vulkan-1.dll",
-      "bin/VulkanRT-License.txt": "VulkanRT-License.txt"
+      "bin/VulkanRT-License.txt": "VulkanRT-License.txt",
+      "spider-sidecar/classes": "spider-sidecar/classes",
+      "spider-sidecar/lib": "spider-sidecar/lib",
+      "spider-sidecar/spiders": "spider-sidecar/spiders"
     }
   }
 }

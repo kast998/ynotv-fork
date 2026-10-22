@@ -162,7 +162,7 @@ diag_log(&format!("sidecar_str={}", sidecar_str));
         ])
         .stdin(Stdio::null())
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stderr(Stdio::piped())
         .current_dir(&sidecar_dir);
         #[cfg(target_os = "windows")]
         {
@@ -171,7 +171,18 @@ diag_log(&format!("sidecar_str={}", sidecar_str));
             cmd.creation_flags(0x08000000);
         }
         match cmd.spawn() {
-            Ok(child) => {
+            Ok(mut child) => {
+                // Drain Java stderr into the diag log so crashes are visible.
+                if let Some(stderr) = child.stderr.take() {
+                    std::thread::spawn(move || {
+                        use std::io::{BufRead, BufReader};
+                        let reader = BufReader::new(stderr);
+                        for line in reader.lines().flatten() {
+                            diag_log(&format!("[JVM] {}", line));
+                        }
+                        diag_log("[JVM] stderr closed (process likely exited)");
+                    });
+                }
                 diag_log(&format!("spawn OK pid={:?}", child.id()));
                 log::info!(
                     "[SpiderSidecar] started via {} (pid {:?}) on 127.0.0.1:{}",

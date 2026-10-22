@@ -56,8 +56,6 @@ fn main() {
         println!("cargo:rustc-link-arg=-Wl,-rpath,@loader_path/../Frameworks");
     }
 
-    tauri_build::build()
-
     // --- Spider sidecar: ensure a JRE is bundled (Windows) ---
     // Downloads Temurin 17 JRE once per fresh build so the TVBox spider
     // sidecar is truly self-contained (no system Java required).
@@ -102,4 +100,8 @@ if (-not (Test-Path "$target\bin\javaw.exe")) { throw "JRE download/extract fail
             }
         }
     }
+
+    tauri_build::build();
+
+
 }

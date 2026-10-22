@@ -31,6 +31,15 @@ fn diag_log(msg: &str) {
     }
 }
 
+
+/// Strip the Windows verbatim-path prefix (\\?\) if present.
+/// Java's classpath parser does not understand it, so all paths handed
+/// to the JVM (classpath, spider dir arg) must be stripped.
+fn strip_verbatim_prefix(p: &std::path::Path) -> String {
+    let s = p.to_string_lossy();
+    s.strip_prefix("\\\\?\\").unwrap_or(&s).to_string()
+}
+
 fn chrono_now() -> String {
     // Simple timestamp without external crates.
     match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
@@ -127,11 +136,12 @@ pub fn start_spider_sidecar(app: &AppHandle) {
         diag_log(&format!("using java: {}", java.display()));
         // Classpath: <dir>/classes + every jar in <dir>/lib. The service
         // loads spider jars itself from <dir>/spiders (argv[1]).
+        let sidecar_str = strip_verbatim_prefix(&sidecar_dir);
         #[cfg(target_os = "windows")]
         let cp = format!(
             "{}\\classes;{}\\lib\\*",
-            sidecar_dir.display(),
-            sidecar_dir.display()
+            sidecar_str,
+            sidecar_str
         );
         #[cfg(not(target_os = "windows"))]
         let cp = format!(
@@ -141,13 +151,14 @@ pub fn start_spider_sidecar(app: &AppHandle) {
         );
 
         diag_log(&format!("classpath={}", cp));
+diag_log(&format!("sidecar_str={}", sidecar_str));
         let mut cmd = Command::new(&java);
         cmd.args([
             "-cp",
             &cp,
             "host.SpiderService",
             &SIDECAR_PORT.to_string(),
-            &sidecar_dir.to_string_lossy(),
+            &sidecar_str,
         ])
         .stdin(Stdio::null())
         .stdout(Stdio::null())

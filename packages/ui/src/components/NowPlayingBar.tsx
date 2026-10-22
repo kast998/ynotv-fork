@@ -785,7 +785,7 @@ export function NowPlayingBar({
                   {isVod || isCatchup
                     ? formatTime(position)
                     : timeshiftState
-                    ? (timeshiftState.behindLive < 5 ? 'LIVE' : `-${formatTime(timeshiftState.behindLive)}`)
+                    ? (timeshiftState.behindLive < 5 ? 'LIVE' : 'LIVE')
                     : (timeRemaining ? `-${timeRemaining}` : 'LIVE')}
                 </span>
               </div>
@@ -846,7 +846,7 @@ export function NowPlayingBar({
                         </span>
                       )}
                       <span className="npb-clean-behind-text">
-                        −{t('behindLive', { time: formatTime(timeshiftState.behindLive) })}
+                        'LIVE'
                       </span>
                     </div>
                   ) : (
@@ -1359,11 +1359,11 @@ export function NowPlayingBar({
                               {isLive ? (
                                 <span className="npb-live-badge">● LIVE</span>
                               ) : (
-                                <span className="npb-behind-live">−{t('behindLive', { time: formatTime(behindLive) })}</span>
+                                <span className="npb-behind-live">LIVE</span>
                               )}
                             </div>
                           </div>
-                          <span className="npb-time-remaining">−{formatTime(behindLive)}</span>
+                          <span className="npb-time-remaining">LIVE</span>
                           {!isLive && onTimeshiftCatchUp && (
                             <button className="npb-btn npb-live-btn" onClick={onTimeshiftCatchUp} title={t('catchUpToLive')}>
                               ⏭ {t('live')}

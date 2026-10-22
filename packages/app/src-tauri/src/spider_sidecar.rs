@@ -20,6 +20,26 @@ use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
+/// Append a line to ~/Desktop/ynotv-sidecar.log for diagnostics.
+fn diag_log(msg: &str) {
+    use std::io::Write;
+    if let Ok(home) = std::env::var("USERPROFILE") {
+        let p = std::path::PathBuf::from(home).join("Desktop").join("ynotv-sidecar.log");
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&p) {
+            let _ = writeln!(f, "[{}] {}", chrono_now(), msg);
+        }
+    }
+}
+
+fn chrono_now() -> String {
+    // Simple timestamp without external crates.
+    match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+        Ok(d) => format!("{}", d.as_secs()),
+        Err(_) => "?".into(),
+    }
+}
+
+
 /// Port the TVBox UI expects the sidecar on (must match the frontend).
 pub const SIDECAR_PORT: u16 = 17890;
 /// Resource subdir carrying the Java service files.
@@ -82,7 +102,9 @@ pub fn start_spider_sidecar(app: &AppHandle) {
                 return;
             }
         };
+        diag_log(&format!("resource_dir={}", resource_dir.display()));
         let sidecar_dir = resource_dir.join(SIDECAR_DIR_NAME);
+        diag_log(&format!("sidecar_dir={}", sidecar_dir.display()));
         if !sidecar_dir.join("classes").is_dir() {
             log::warn!(
                 "[SpiderSidecar] resources missing at {}",
@@ -90,6 +112,7 @@ pub fn start_spider_sidecar(app: &AppHandle) {
             );
             return;
         }
+        diag_log("searching for JVM...");
         let java = match find_java(&sidecar_dir) {
             Some(j) => j,
             None => {
@@ -101,6 +124,7 @@ pub fn start_spider_sidecar(app: &AppHandle) {
             }
         };
 
+        diag_log(&format!("using java: {}", java.display()));
         // Classpath: <dir>/classes + every jar in <dir>/lib. The service
         // loads spider jars itself from <dir>/spiders (argv[1]).
         #[cfg(target_os = "windows")]
@@ -116,6 +140,7 @@ pub fn start_spider_sidecar(app: &AppHandle) {
             sidecar_dir.display()
         );
 
+        diag_log(&format!("classpath={}", cp));
         let mut cmd = Command::new(&java);
         cmd.args([
             "-cp",
@@ -136,6 +161,7 @@ pub fn start_spider_sidecar(app: &AppHandle) {
         }
         match cmd.spawn() {
             Ok(child) => {
+                diag_log(&format!("spawn OK pid={:?}", child.id()));
                 log::info!(
                     "[SpiderSidecar] started via {} (pid {:?}) on 127.0.0.1:{}",
                     java.display(),
@@ -146,7 +172,10 @@ pub fn start_spider_sidecar(app: &AppHandle) {
                     *state.child.lock().unwrap() = Some(child);
                 }
             }
-            Err(e) => log::warn!("[SpiderSidecar] spawn failed: {e}"),
+            Err(e) => {
+                diag_log(&format!("spawn FAILED: {e}"));
+                log::warn!("[SpiderSidecar] spawn failed: {e}")
+            }
         }
     });
 }

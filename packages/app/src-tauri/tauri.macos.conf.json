@@ -6,7 +6,10 @@
       "macos-bundle-runtime/bin/yt-dlp"
     ],
     "resources": {
-      "macos-bundle-runtime/cenc_component_producer": "cenc_component_producer"
+      "macos-bundle-runtime/cenc_component_producer": "cenc_component_producer",
+      "spider-sidecar/classes": "spider-sidecar/classes",
+      "spider-sidecar/lib": "spider-sidecar/lib",
+      "spider-sidecar/spiders": "spider-sidecar/spiders"
     },
     "macOS": {
       "files": {

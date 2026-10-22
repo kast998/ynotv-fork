@@ -57,4 +57,50 @@ fn main() {
     }
 
     tauri_build::build()
+
+    // --- Spider sidecar: ensure a JRE is bundled (Windows) ---
+    // Downloads Temurin 17 JRE once per fresh build so the TVBox spider
+    // sidecar is truly self-contained (no system Java required).
+    if target_os == "windows" {
+        let jre_dir = manifest.join("spider-sidecar").join("jre");
+        let javaw = jre_dir.join("bin").join("javaw.exe");
+        println!("cargo:rerun-if-changed=spider-sidecar/jre");
+        if !javaw.is_file() {
+            println!("cargo:warning=Spider sidecar JRE missing, downloading Temurin 17 JRE...");
+            let ps = r#"
+$ErrorActionPreference = 'Stop'
+$zip = "$env:TEMP\ynotv-jre.zip"
+$dst = "$env:TEMP\ynotv-jre-extract"
+if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
+Invoke-WebRequest -Uri "https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jre/hotspot/normal/eclipse" -OutFile $zip
+Expand-Archive -Path $zip -DestinationPath $dst -Force
+$src = Get-ChildItem $dst -Directory | Select-Object -First 1
+$target = "SPIDERSIDECAR_JRE_PLACEHOLDER"
+New-Item -ItemType Directory -Force -Path $target | Out-Null
+Copy-Item -Path "$($src.FullName)\*" -Destination $target -Recurse -Force
+if (-not (Test-Path "$target\bin\javaw.exe")) { throw "JRE download/extract failed" }
+"#;
+            let manifest_str = manifest.to_string_lossy().replace("/", "\");
+            let jre_target = format!("{}\\spider-sidecar\\jre", manifest_str);
+            let ps = ps.replace("SPIDERSIDECAR_JRE_PLACEHOLDER", &jre_target);
+            let out = std::process::Command::new("powershell")
+                .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &ps])
+                .output();
+            match out {
+                Ok(o) if o.status.success() => {
+                    println!("cargo:warning=Temurin JRE 17 bundled for spider sidecar.");
+                }
+                Ok(o) => {
+                    println!(
+                        "cargo:warning=JRE download failed ({}), sidecar will need system Java: {}",
+                        o.status,
+                        String::from_utf8_lossy(&o.stderr).chars().take(300).collect::<String>()
+                    );
+                }
+                Err(e) => {
+                    println!("cargo:warning=JRE download spawn failed: {e}");
+                }
+            }
+        }
+    }
 }

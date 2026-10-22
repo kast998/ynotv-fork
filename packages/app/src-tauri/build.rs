@@ -67,7 +67,8 @@ fn main() {
         println!("cargo:rerun-if-changed=spider-sidecar/jre");
         if !javaw.is_file() {
             println!("cargo:warning=Spider sidecar JRE missing, downloading Temurin 17 JRE...");
-            let ps = r#"
+            let jre_target = jre_dir.to_string_lossy().replace("/", "\\");
+            let ps_template = r#"
 $ErrorActionPreference = 'Stop'
 $zip = "$env:TEMP\ynotv-jre.zip"
 $dst = "$env:TEMP\ynotv-jre-extract"
@@ -75,14 +76,12 @@ if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
 Invoke-WebRequest -Uri "https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jre/hotspot/normal/eclipse" -OutFile $zip
 Expand-Archive -Path $zip -DestinationPath $dst -Force
 $src = Get-ChildItem $dst -Directory | Select-Object -First 1
-$target = "SPIDERSIDECAR_JRE_PLACEHOLDER"
+$target = "JRE_TARGET_PLACEHOLDER"
 New-Item -ItemType Directory -Force -Path $target | Out-Null
 Copy-Item -Path "$($src.FullName)\*" -Destination $target -Recurse -Force
 if (-not (Test-Path "$target\bin\javaw.exe")) { throw "JRE download/extract failed" }
 "#;
-            let manifest_str = manifest.to_string_lossy().replace("/", "\");
-            let jre_target = format!("{}\\spider-sidecar\\jre", manifest_str);
-            let ps = ps.replace("SPIDERSIDECAR_JRE_PLACEHOLDER", &jre_target);
+            let ps = ps_template.replace("JRE_TARGET_PLACEHOLDER", &jre_target);
             let out = std::process::Command::new("powershell")
                 .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &ps])
                 .output();

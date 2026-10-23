@@ -1119,6 +1119,99 @@ fn ytdlp_download_url() -> Option<&'static str> {
     None
 }
 
+// ── YouTube search (via bundled yt-dlp) ────────────────────────────────────
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct YoutubeItem {
+    pub id: String,
+    pub title: String,
+    pub url: String,
+    pub channel: Option<String>,
+    pub duration: Option<f64>,
+    pub thumbnail: Option<String>,
+    pub view_count: Option<u64>,
+    pub is_live: bool,
+}
+
+/// Search YouTube (or list a channel/playlist URL) with yt-dlp's flat extractor.
+/// `query` may be plain text or a youtube.com URL.
+#[tauri::command]
+async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<YoutubeItem>, String> {
+    let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
+    let n = limit.unwrap_or(30).clamp(1, 100);
+    let q = query.trim();
+    if q.is_empty() {
+        return Ok(vec![]);
+    }
+    let target = if q.starts_with("http://") || q.starts_with("https://") {
+        q.to_string()
+    } else {
+        format!("ytsearch{}:{}", n, q)
+    };
+    let mut cmd = tokio::process::Command::new(ytdl);
+    cmd.arg("--flat-playlist")
+        .arg("-J")
+        .arg("--no-warnings")
+        .arg("--playlist-end")
+        .arg(n.to_string())
+        .arg(&target);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    let out = tokio::time::timeout(std::time::Duration::from_secs(45), cmd.output())
+        .await
+        .map_err(|_| "YouTube search timed out".to_string())?
+        .map_err(|e| e.to_string())?;
+    if !out.status.success() {
+        let err = String::from_utf8_lossy(&out.stderr);
+        return Err(err.lines().last().unwrap_or("yt-dlp failed").to_string());
+    }
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).map_err(|e| e.to_string())?;
+    let entries: Vec<serde_json::Value> = match v.get("entries").and_then(|e| e.as_array()) {
+        Some(a) => a.clone(),
+        None => vec![v.clone()],
+    };
+    let mut items = Vec::new();
+    for e in entries {
+        let id = e.get("id").and_then(|x| x.as_str()).unwrap_or("").to_string();
+        if id.is_empty() {
+            continue;
+        }
+        let url = e
+            .get("url")
+            .and_then(|x| x.as_str())
+            .filter(|u| u.starts_with("http"))
+            .map(|u| u.to_string())
+            .unwrap_or_else(|| format!("https://www.youtube.com/watch?v={}", id));
+        let thumbnail = e
+            .get("thumbnails")
+            .and_then(|t| t.as_array())
+            .and_then(|a| a.last())
+            .and_then(|t| t.get("url"))
+            .and_then(|u| u.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| Some(format!("https://i.ytimg.com/vi/{}/hqdefault.jpg", id)));
+        let live = e.get("live_status").and_then(|x| x.as_str()).unwrap_or("");
+        items.push(YoutubeItem {
+            title: e.get("title").and_then(|x| x.as_str()).unwrap_or(id.as_str()).to_string(),
+            channel: e
+                .get("channel")
+                .or_else(|| e.get("uploader"))
+                .and_then(|x| x.as_str())
+                .map(|s| s.to_string()),
+            duration: e.get("duration").and_then(|x| x.as_f64()),
+            view_count: e.get("view_count").and_then(|x| x.as_u64()),
+            is_live: live == "is_live" || e.get("is_live").and_then(|x| x.as_bool()).unwrap_or(false),
+            thumbnail,
+            url,
+            id,
+        });
+    }
+    Ok(items)
+}
+
 /// Report which yt-dlp the app resolves and its version.
 #[tauri::command]
 async fn ytdlp_info() -> Result<YtdlpInfo, String> {
@@ -5961,6 +6054,7 @@ pub fn run() {
             // Utility commands
             open_external_url,
             ytdlp_info,
+            youtube_search,
             update_ytdlp,
             spawn_external_player,
             spawn_external_player_reuse,

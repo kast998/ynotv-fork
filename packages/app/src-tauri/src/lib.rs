@@ -1313,6 +1313,87 @@ async fn youtube_resolve(url: String, cookies: Option<String>) -> Result<String,
     }
 }
 
+fn youtube_cookie_file() -> Option<std::path::PathBuf> {
+    std::env::var("APPDATA")
+        .map(std::path::PathBuf::from)
+        .or_else(|_| std::env::var("HOME").map(|h| std::path::PathBuf::from(h).join(".config")))
+        .ok()
+        .map(|b| b.join("ynotv").join("youtube-cookies.txt"))
+}
+
+/// Open a built-in window on the Google sign-in page for YouTube. Its cookies
+/// are saved for yt-dlp by `youtube_login_save` once the user has signed in.
+#[tauri::command]
+async fn youtube_login_open(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    if let Some(w) = app.get_webview_window("yt-login") {
+        let _ = w.show();
+        let _ = w.set_focus();
+        return Ok(());
+    }
+    let url: tauri::Url = "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F"
+        .parse()
+        .map_err(|e| format!("{e}"))?;
+    tauri::WebviewWindowBuilder::new(&app, "yt-login", tauri::WebviewUrl::External(url))
+        .title("登录 YouTube（登录完成后回到 ynoTV 点“保存登录”）")
+        .inner_size(520.0, 760.0)
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0")
+        .build()
+        .map_err(|e| format!("无法打开登录窗口: {e}"))?;
+    Ok(())
+}
+
+/// Write the login window's YouTube/Google cookies to youtube-cookies.txt
+/// (Netscape format) and close the window. Returns how many were saved.
+#[tauri::command]
+async fn youtube_login_save(app: tauri::AppHandle) -> Result<usize, String> {
+    use tauri::Manager;
+    let w = app
+        .get_webview_window("yt-login")
+        .ok_or_else(|| "登录窗口已关闭，请先点“登录 YouTube”并完成登录".to_string())?;
+    let w2 = w.clone();
+    let cookies = tauri::async_runtime::spawn_blocking(move || w2.cookies())
+        .await
+        .map_err(|e| format!("{e}"))?
+        .map_err(|e| format!("读取 cookie 失败: {e}"))?;
+    let mut lines = vec!["# Netscape HTTP Cookie File".to_string(), "# Saved by ynoTV".to_string()];
+    let mut signed_in = false;
+    let mut n = 0usize;
+    for c in cookies.iter() {
+        let domain = c.domain().unwrap_or("").to_string();
+        if !(domain.ends_with("youtube.com") || domain.ends_with("google.com")) {
+            continue;
+        }
+        if domain.ends_with("youtube.com") && (c.name() == "LOGIN_INFO" || c.name() == "SAPISID" || c.name() == "__Secure-3PSID") {
+            signed_in = true;
+        }
+        let dom = if domain.starts_with('.') { domain.clone() } else { format!(".{domain}") };
+        let http_only = c.http_only().unwrap_or(false);
+        let expires = c.expires_datetime().map(|t| t.unix_timestamp()).unwrap_or(0).max(0);
+        lines.push(format!(
+            "{}{}\tTRUE\t{}\t{}\t{}\t{}\t{}",
+            if http_only { "#HttpOnly_" } else { "" },
+            dom,
+            c.path().unwrap_or("/"),
+            if c.secure().unwrap_or(false) { "TRUE" } else { "FALSE" },
+            expires,
+            c.name(),
+            c.value()
+        ));
+        n += 1;
+    }
+    if !signed_in {
+        return Err("还没检测到 YouTube 登录：请在登录窗口里登录，直到看到 YouTube 首页，再点“保存登录”".to_string());
+    }
+    let file = youtube_cookie_file().ok_or_else(|| "找不到 APPDATA 目录".to_string())?;
+    if let Some(dir) = file.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| format!("{e}"))?;
+    }
+    std::fs::write(&file, lines.join("\n") + "\n").map_err(|e| format!("写入 cookie 文件失败: {e}"))?;
+    let _ = w.close();
+    Ok(n)
+}
+
 /// Report which yt-dlp the app resolves and its version.
 #[tauri::command]
 async fn ytdlp_info() -> Result<YtdlpInfo, String> {
@@ -6157,6 +6238,8 @@ pub fn run() {
             ytdlp_info,
             youtube_search,
             youtube_resolve,
+            youtube_login_open,
+            youtube_login_save,
             update_ytdlp,
             spawn_external_player,
             spawn_external_player_reuse,

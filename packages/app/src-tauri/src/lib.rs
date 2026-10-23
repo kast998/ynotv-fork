@@ -1243,7 +1243,7 @@ async fn youtube_resolve_once(ytdl: &std::path::Path, url: &str, extra: &[String
         .arg("--no-warnings")
         .arg("--no-playlist")
         .arg("-f")
-        .arg("b[protocol^=m3u8][height<=1080]/b[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/b");
+        .arg("b[protocol^=m3u8][height<=1080]/b[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bv*[height<=1080]+ba/bv*+ba/b");
     for e in extra {
         cmd.arg(e);
     }
@@ -1266,12 +1266,18 @@ async fn youtube_resolve_once(ytdl: &std::path::Path, url: &str, extra: &[String
             .unwrap_or("yt-dlp failed")
             .to_string());
     }
-    String::from_utf8_lossy(&out.stdout)
-        .lines()
-        .map(|l| l.trim())
-        .find(|l| l.starts_with("http"))
-        .map(|l| l.to_string())
-        .ok_or_else(|| "yt-dlp returned no stream URL".to_string())
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let urls: Vec<&str> = stdout.lines().map(|l| l.trim()).filter(|l| l.starts_with("http")).collect();
+    match urls.len() {
+        0 => Err("yt-dlp returned no stream URL".to_string()),
+        1 => Ok(urls[0].to_string()),
+        // Separate video + audio (DASH only): combine them for mpv with an EDL,
+        // the same way mpv's own ytdl hook does.
+        _ => {
+            let part = |u: &str| format!("!no_clip;!no_chapters;%{}%{}", u.len(), u);
+            Ok(format!("edl://{};!new_stream;{}", part(urls[0]), part(urls[1])))
+        }
+    }
 }
 
 /// Resolve a YouTube watch URL to one directly playable stream URL.

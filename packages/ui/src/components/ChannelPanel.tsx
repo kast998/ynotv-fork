@@ -3123,7 +3123,7 @@ export function ChannelPanel({
                 )}
               </div>
               <span className="guide-minibar-seek-time">
-                {ts ? `-${formatSeekTime(ts.behindLive)}` : ''}
+                {ts ? (ts.behindLive < 15 ? `LIVE ${new Date(Date.now() - ts.behindLive * 1000).toLocaleTimeString('zh-CN', { hour12: false })}` : new Date(Date.now() - ts.behindLive * 1000).toLocaleTimeString('zh-CN', { hour12: false })) : ''}
               </span>
             </div>
           )}

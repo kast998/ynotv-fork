@@ -57,8 +57,8 @@ function fmtViews(n?: number | null): string {
 
 function describeYtError(msg: string, what: string): string {
   if (msg.startsWith('BOTCHECK|') || /not a bot|sign in/i.test(msg)) {
-    return 'YouTube 要求登录验证（当前代理 IP 被判为机器人）。解决：用 Firefox 登录一次 YouTube（推荐；Chrome/Edge 需先完全退出浏览器才能读取 cookie），' +
-      '再在搜索框旁“登录来源”选对应浏览器后重新点视频；或把导出的 cookies.txt 放到 %APPDATA%\\ynotv\\youtube-cookies.txt。换个干净的代理节点也常能直接解决。';
+    return 'YouTube 要求登录验证（当前网络被判为机器人）。点搜索按钮旁的“登录 YouTube”，在弹出窗口登录后点“保存登录”，再点视频即可。'+
+      '若已保存过仍出现，说明登录已过期，重新登录保存一次。';
   }
   return `${what}：${msg}。先到 设置 › 关于 › yt-dlp 点更新再试。`;
 }
@@ -103,6 +103,30 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
   const changeCookies = (v: string) => {
     setCookies(v);
     try { localStorage.setItem('youtube-cookies', v); } catch { /* ignore */ }
+  };
+
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const openLogin = async () => {
+    setError(null);
+    setNotice(null);
+    try {
+      await invoke('youtube_login_open');
+      setLoginOpen(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+  const saveLogin = async () => {
+    setError(null);
+    try {
+      const n = await invoke<number>('youtube_login_save');
+      setLoginOpen(false);
+      changeCookies('auto');
+      setNotice(`已保存 YouTube 登录（${n} 个 cookie），现在点视频试试。`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
   };
 
   const play = useCallback(async (it: YoutubeItem, mode?: VodPlayerMode) => {
@@ -171,7 +195,23 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
         <button className="tvbox-btn" type="submit" disabled={loading || !q.trim()}>
           {loading ? '搜索中…' : '搜索'}
         </button>
+        <button
+          className="tvbox-btn"
+          type="button"
+          onClick={() => void (loginOpen ? saveLogin() : openLogin())}
+          title="在内置窗口登录 YouTube，保存后播放时自动使用"
+        >
+          {loginOpen ? '保存登录' : '登录 YouTube'}
+        </button>
       </form>
+      {loginOpen && (
+        <div className="tvbox-hint" style={{ padding: '6px 2px', opacity: 0.85 }}>
+          在弹出的窗口里登录，看到 YouTube 首页后，回来点“保存登录”。
+        </div>
+      )}
+      {notice && (
+        <div className="tvbox-hint" style={{ padding: '6px 2px', color: '#7fd18b' }}>{notice}</div>
+      )}
 
       <div className="youtube-chips">
         {(history.length ? history : QUICK).map((t) => (

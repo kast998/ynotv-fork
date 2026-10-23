@@ -55,6 +55,14 @@ function fmtViews(n?: number | null): string {
   return `${n}次观看`;
 }
 
+function describeYtError(msg: string, what: string): string {
+  if (msg.startsWith('BOTCHECK|') || /not a bot|sign in/i.test(msg)) {
+    return 'YouTube 要求登录验证（当前代理 IP 被判为机器人）。解决：用 Firefox 登录一次 YouTube（推荐；Chrome/Edge 需先完全退出浏览器才能读取 cookie），' +
+      '再在搜索框旁“登录来源”选对应浏览器后重新点视频；或把导出的 cookies.txt 放到 %APPDATA%\\ynotv\\youtube-cookies.txt。换个干净的代理节点也常能直接解决。';
+  }
+  return `${what}：${msg}。先到 设置 › 关于 › yt-dlp 点更新再试。`;
+}
+
 export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
   const [q, setQ] = useState('');
   const [items, setItems] = useState<YoutubeItem[]>([]);
@@ -82,17 +90,20 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     } catch (e) {
       setItems([]);
       const msg = e instanceof Error ? e.message : String(e);
-      setError(
-        msg.includes('not found')
-          ? '没找到 yt-dlp。到 设置 › 关于 › yt-dlp 点更新即可下载。'
-          : `搜索失败：${msg}（如果在国内需要代理才能访问 YouTube）`,
-      );
+      setError(describeYtError(msg, '搜索失败'));
     } finally {
       setLoading(false);
     }
   }, []);
 
   const [resolving, setResolving] = useState<string | null>(null);
+  const [cookies, setCookies] = useState<string>(() => {
+    try { return localStorage.getItem('youtube-cookies') || 'auto'; } catch { return 'auto'; }
+  });
+  const changeCookies = (v: string) => {
+    setCookies(v);
+    try { localStorage.setItem('youtube-cookies', v); } catch { /* ignore */ }
+  };
 
   const play = useCallback(async (it: YoutubeItem, mode?: VodPlayerMode) => {
     // A channel or playlist entry: open it as a list instead of playing.
@@ -106,7 +117,7 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     try {
       // Resolve to a direct stream (HLS) so every player mode can open it,
       // instead of relying on mpv's ytdl hook.
-      const direct = await invoke<string>('youtube_resolve', { url: it.url });
+      const direct = await invoke<string>('youtube_resolve', { url: it.url, cookies });
       onPlay({
         url: direct,
         title: it.title,
@@ -117,15 +128,11 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
       } as VodPlayInfo, mode);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(
-        /sign in|bot/i.test(msg)
-          ? `YouTube 要求验证（${msg}）。换个代理节点再试。`
-          : `播放解析失败：${msg}。先到 设置 › 关于 › yt-dlp 点更新再试。`,
-      );
+      setError(describeYtError(msg, '播放解析失败'));
     } finally {
       setResolving(null);
     }
-  }, [onPlay, search, resolving]);
+  }, [onPlay, search, resolving, cookies]);
 
   return (
     <div className="tvbox-page youtube-page">
@@ -147,6 +154,20 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
           placeholder="搜索 YouTube，或粘贴视频 / 频道 / 播放列表链接"
           autoFocus
         />
+        <select
+          className="tvbox-input"
+          style={{ maxWidth: 170, flex: '0 0 auto' }}
+          value={cookies}
+          onChange={(e) => changeCookies(e.target.value)}
+          title="遇到“确认你不是机器人”时，从哪个浏览器读取 YouTube 登录 cookie"
+        >
+          <option value="auto">登录来源：自动</option>
+          <option value="firefox">Firefox</option>
+          <option value="edge">Edge</option>
+          <option value="chrome">Chrome</option>
+          <option value="brave">Brave</option>
+          <option value="none">不使用</option>
+        </select>
         <button className="tvbox-btn" type="submit" disabled={loading || !q.trim()}>
           {loading ? '搜索中…' : '搜索'}
         </button>

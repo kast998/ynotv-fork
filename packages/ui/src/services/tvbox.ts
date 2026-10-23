@@ -201,7 +201,33 @@ function extToString(ext: unknown): string | undefined {
 }
 
 /** Fetch and parse a full TVBox JSON config (sites + lives). */
+/**
+ * Built-in 采集 (AppleCMS/maccms) sources. These return m3u8 links directly, so
+ * they play on desktop without any Android spider — same idea as LibreTV/MoonTV.
+ */
+export const BUILTIN_CAIJI_URL = 'builtin:caiji';
+const BUILTIN_CAIJI: Array<[string, string, string]> = [
+  ['lzi', '量子资源', 'https://cj.lziapi.com/api.php/provide/vod/'],
+  ['ffzy', '非凡资源', 'https://api.ffzyapi.com/api.php/provide/vod/'],
+  ['bfzy', '暴风资源', 'https://bfzyapi.com/api.php/provide/vod/'],
+  ['zuida', '最大资源', 'https://api.zuidapi.com/api.php/provide/vod/'],
+  ['ruyi', '如意资源', 'https://cj.rycjapi.com/api.php/provide/vod/'],
+  ['360zy', '360资源', 'https://360zy.com/api.php/provide/vod/'],
+  ['modu', '魔都资源', 'https://www.mdzyapi.com/api.php/provide/vod/'],
+  ['hongniu', '红牛资源', 'https://www.hongniuzy2.com/api.php/provide/vod/'],
+  ['jisu', '极速资源', 'https://jszyapi.com/api.php/provide/vod/'],
+  ['dytt', '电影天堂资源', 'https://caiji.dyttzyapi.com/api.php/provide/vod/'],
+  ['guangsu', '光速资源', 'https://api.guangsuapi.com/api.php/provide/vod/'],
+  ['subo', '速播资源', 'https://subocaiji.com/api.php/provide/vod/'],
+];
+
 export async function fetchTvboxConfigFull(url: string): Promise<TvboxConfig> {
+  if (url === BUILTIN_CAIJI_URL) {
+    return {
+      sites: BUILTIN_CAIJI.map(([key, name, api]) => ({ key, name: `📦 ${name}`, type: 1, api, configUrl: url })),
+      lives: [],
+    };
+  }
   const data = parseTvboxConfigText(await fetchText(url, 20000));
   const rawSites = Array.isArray(data?.sites) ? data.sites : [];
   const rawLives = Array.isArray(data?.lives) ? data.lives : [];
@@ -253,16 +279,39 @@ export function parseEpisodes(vodPlayUrl: string | undefined): TvboxEpisode[] {
 }
 
 /** Normalize a detailContent response into TvboxDetail. */
+/**
+ * Pick which "$$$" line to play. 采集 APIs often list a web "share/play" line
+ * first and the real m3u8 line second (e.g. feifan$$$ffm3u8), so prefer a line
+ * whose name says m3u8 or whose episode URLs are .m3u8.
+ */
+function pickPlayLine(from: string[], urls: string[]): number {
+  let best = 0;
+  let bestScore = -1;
+  urls.forEach((u, i) => {
+    const name = (from[i] || '').toLowerCase();
+    let score = 0;
+    if (/\.m3u8/i.test(u)) score += 2;
+    if (name.includes('m3u8')) score += 1;
+    if (score > bestScore) { best = i; bestScore = score; }
+  });
+  return best;
+}
+
 export function normalizeDetail(data: any): TvboxDetail | null {
   const item = data?.list?.[0];
   if (!item) return null;
+  const fromAll = item.vod_play_from ? String(item.vod_play_from).split('$$$') : [];
+  const urlAll = item.vod_play_url ? String(item.vod_play_url).split('$$$') : [];
+  const idx = urlAll.length > 1 ? pickPlayLine(fromAll, urlAll) : 0;
+  // Put the chosen line first so callers that read index 0 (episodes, play flag) agree.
+  const reorder = (arr: string[]) => (arr.length > idx ? [arr[idx], ...arr.filter((_, i) => i !== idx)] : arr);
   return {
     vod_id: String(item.vod_id ?? ''),
     vod_name: String(item.vod_name ?? ''),
     vod_pic: item.vod_pic ? String(item.vod_pic) : undefined,
     vod_remarks: item.vod_remarks ? String(item.vod_remarks) : undefined,
-    vod_play_from: item.vod_play_from ? String(item.vod_play_from) : undefined,
-    episodes: parseEpisodes(item.vod_play_url ? String(item.vod_play_url) : undefined),
+    vod_play_from: fromAll.length ? reorder(fromAll).join('$$$') : undefined,
+    episodes: parseEpisodes(urlAll.length ? reorder(urlAll).join('$$$') : undefined),
   };
 }
 
@@ -359,6 +408,7 @@ const STORAGE_KEY = 'ynotv.tvbox.configs.v1';
 
 /** Built-in configs added once for every user (饭太硬 / 摸鱼 / 王二小). */
 export const DEFAULT_CONFIG_URLS = [
+  'builtin:caiji',
   'https://0.wudaozhe.net/tvbox/饭太硬.json',
   'https://0.wudaozhe.net/tvbox/摸鱼.json',
   'https://0.wudaozhe.net/tvbox/王二小.json',
@@ -374,6 +424,17 @@ export function loadConfigSources(): TvboxConfigSource[] {
   } catch {
     list = [];
   }
+  // v2 adds the built-in 采集 sources (at the top) for users seeded by v1.
+  try {
+    const ls = (globalThis as any).localStorage;
+    if (ls && ls.getItem(DEFAULTS_SEEDED_KEY) && !ls.getItem('ynotv.tvbox.defaults.v2')) {
+      if (!list.some((c) => c.url === 'builtin:caiji')) list.unshift({ url: 'builtin:caiji', addedAt: Date.now() });
+      ls.setItem(STORAGE_KEY, JSON.stringify(list));
+      ls.setItem('ynotv.tvbox.defaults.v2', '1');
+    }
+  } catch {
+    /* storage unavailable */
+  }
   // Seed the defaults once; if the user deletes one later it stays deleted.
   try {
     const ls = (globalThis as any).localStorage;
@@ -382,6 +443,7 @@ export function loadConfigSources(): TvboxConfigSource[] {
       for (const url of DEFAULT_CONFIG_URLS) if (!have.has(url)) list.push({ url, addedAt: Date.now() });
       ls.setItem(STORAGE_KEY, JSON.stringify(list));
       ls.setItem(DEFAULTS_SEEDED_KEY, '1');
+      ls.setItem('ynotv.tvbox.defaults.v2', '1');
     }
   } catch {
     /* storage unavailable */

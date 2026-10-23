@@ -6,10 +6,12 @@ import {
   TvboxCategory,
   TvboxVideo,
   TvboxDetail,
-  apiToSpiderClass,
+  TvboxLive,
+  resolveSpiderClass,
   getSidecarSpiders,
   invokeSpider,
   fetchTvboxConfig,
+  fetchTvboxConfigFull,
   normalizeCategories,
   normalizeVideoList,
   normalizeDetail,
@@ -38,9 +40,7 @@ type Screen =
 
 /** Resolve which spider class (if any) backs a site, given the sidecar's list. */
 function resolveSpider(site: TvboxSite, available: Set<string>): string | null {
-  const cls = apiToSpiderClass(site.api);
-  if (cls && available.has(cls)) return cls;
-  return null;
+  return resolveSpiderClass(site.api, available);
 }
 
 export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
@@ -48,6 +48,9 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
   const [spiderClasses, setSpiderClasses] = useState<string[]>([]);
   const [configs, setConfigs] = useState<TvboxConfigSource[]>(() => loadConfigSources());
   const [sites, setSites] = useState<TvboxSite[]>([]);
+  const [lives, setLives] = useState<TvboxLive[]>([]);
+  const [liveMsg, setLiveMsg] = useState<string | null>(null);
+  const [importingLive, setImportingLive] = useState<string | null>(null);
   const [sitesLoading, setSitesLoading] = useState(false);
   const [sitesError, setSitesError] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState('');
@@ -86,15 +89,16 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
       const results = await Promise.all(
         cfgList.map(async (c) => {
           try {
-            return await fetchTvboxConfig(c.url);
+            return await fetchTvboxConfigFull(c.url);
           } catch (e) {
             console.warn('[tvbox] config failed', c.url, e);
-            return [] as TvboxSite[];
+            return { sites: [] as TvboxSite[], lives: [] as TvboxLive[] };
           }
         }),
       );
       if (!mountedRef.current) return;
-      const all = results.flat();
+      setLives(results.flatMap((r) => r.lives));
+      const all = results.flatMap((r) => r.sites);
       // de-dupe by key, keep first occurrence
       const seen = new Set<string>();
       setSites(all.filter((s) => {
@@ -133,6 +137,45 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
       setAdding(false);
     }
   }, [newUrl, adding, configs]);
+
+  /** Add a TVBox live entry to ynoTV as a normal M3U playlist source, then sync it. */
+  const importLive = useCallback(async (live: TvboxLive) => {
+    if (importingLive) return;
+    setImportingLive(live.url);
+    setLiveMsg(null);
+    try {
+      const storage = (window as any).storage;
+      const existing = await storage?.getSources?.();
+      const list = Array.isArray(existing) ? existing : Array.isArray(existing?.data) ? existing.data : [];
+      if (list.some((s: any) => s?.url === live.url)) {
+        setLiveMsg(`「${live.name}」已经在直播源里了`);
+        return;
+      }
+      const source = {
+        id: crypto.randomUUID(),
+        name: `TVBox·${live.name}`,
+        type: 'm3u' as const,
+        url: live.url,
+        enabled: true,
+        auto_load_epg: true,
+        live_tv_only: true,
+        user_agent: live.ua || undefined,
+      };
+      const result = await storage.saveSource(source);
+      if (result?.error) throw new Error(result.error);
+      try {
+        const { syncSource } = await import('../db/sync');
+        await syncSource(source as any);
+      } catch (e) {
+        console.warn('[tvbox] live sync failed (will retry on next refresh)', e);
+      }
+      setLiveMsg(`已添加「${live.name}」到直播源，可在直播/EPG 页面观看`);
+    } catch (e) {
+      setLiveMsg(`添加失败: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      if (mountedRef.current) setImportingLive(null);
+    }
+  }, [importingLive]);
 
   const removeConfig = useCallback((url: string) => {
     const next = configs.filter((c) => c.url !== url);
@@ -209,6 +252,22 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
               </li>
             ))}
           </ul>
+          {lives.length > 0 && (
+            <>
+              <p className="tvbox-hint" style={{ marginTop: 12 }}>配置里的直播源（点一下加入 ynoTV 直播）：</p>
+              <ul className="tvbox-config-list">
+                {lives.map((l) => (
+                  <li key={`${l.configUrl}::${l.url}`} className="tvbox-config-item">
+                    <span className="tvbox-config-url" title={l.url}>{l.name}</span>
+                    <button className="tvbox-btn" disabled={importingLive !== null} onClick={() => void importLive(l)}>
+                      {importingLive === l.url ? '添加中…' : '加入直播'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {liveMsg && <p className="tvbox-hint">{liveMsg}</p>}
         </section>
       )}
 
@@ -302,7 +361,7 @@ function SiteList({ loading, compatible, incompatible, onSelect }: {
             {incompatible.map((s) => (
               <div key={`${s.configUrl}::${s.key}`} className="tvbox-card tvbox-card--disabled" title={`缺少爬虫: ${s.api}`}>
                 <span className="tvbox-card-name">{s.name}</span>
-                <span className="tvbox-card-meta">缺少爬虫</span>
+                <span className="tvbox-card-meta">{/guard$/i.test(s.api) ? '加密爬虫·仅安卓' : /\.js$/i.test(s.api) ? 'JS 爬虫·暂不支持' : '缺少爬虫'}</span>
               </div>
             ))}
           </div>
@@ -332,7 +391,7 @@ function SiteHome({ site, spiderClass, onBack, onOpenCategory, onSearch }: {
       try {
         const cats = site.type === 1
           ? await type1Home(site.api)
-          : normalizeCategories(await invokeSpider(spiderClass, 'homeContent', [true]));
+          : normalizeCategories(await invokeSpider(spiderClass, 'homeContent', [true], site.ext));
         if (!alive) return;
         setCats(cats);
       } catch (e) {
@@ -415,7 +474,7 @@ function CategoryView({ site, spiderClass, cat, page, onBack, onPage, onOpenVide
       try {
         const n = site.type === 1
           ? await type1Category(site.api, cat.type_id, page)
-          : normalizeVideoList(await invokeSpider(spiderClass, 'categoryContent', [cat.type_id, String(page), false, {}]));
+          : normalizeVideoList(await invokeSpider(spiderClass, 'categoryContent', [cat.type_id, String(page), false, {}], site.ext));
         if (!alive) return;
         setVideos(n.videos);
         setPagecount(Math.max(1, n.pagecount));
@@ -472,7 +531,7 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
       try {
         const d = site.type === 1
           ? await type1Detail(site.api, video.vod_id)
-          : normalizeDetail(await invokeSpider(spiderClass, 'detailContent', [[video.vod_id]]));
+          : normalizeDetail(await invokeSpider(spiderClass, 'detailContent', [[video.vod_id]], site.ext));
         if (!alive) return;
         if (!d) throw new Error('详情为空');
         // fill in name/pic from the list card when detail lacks them
@@ -498,7 +557,9 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
       let url = ep.url;
       let headers: Record<string, string> | undefined;
       if (site.type !== 1) {
-        const data = await invokeSpider(spiderClass, 'playerContent', ['', ep.url, []]);
+        // TVBox passes the line ("flag") name; many spiders pick the parser by it.
+        const playFlag = (detail.vod_play_from || '').split('$$$')[0] || '';
+        const data = await invokeSpider(spiderClass, 'playerContent', [playFlag, ep.url, []], site.ext);
         if (typeof data?.url === 'string' && data.url) url = data.url;
         if (data?.header && typeof data.header === 'object') headers = data.header;
       }
@@ -581,7 +642,7 @@ function SearchView({ site, spiderClass, query, onBack, onOpenVideo }: {
       try {
         const videos = site.type === 1
           ? (await type1Search(site.api, query)).videos
-          : normalizeVideoList(await invokeSpider(spiderClass, 'searchContent', [query, false])).videos;
+          : normalizeVideoList(await invokeSpider(spiderClass, 'searchContent', [query, false], site.ext)).videos;
         if (!alive) return;
         setVideos(videos);
       } catch (e) {

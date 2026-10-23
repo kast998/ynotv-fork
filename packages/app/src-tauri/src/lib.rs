@@ -1212,6 +1212,39 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
     Ok(items)
 }
 
+/// Resolve a YouTube watch URL to one directly playable stream URL.
+/// Prefers YouTube's HLS manifest (muxed audio+video, works in every player
+/// mode), then a muxed progressive format.
+#[tauri::command]
+async fn youtube_resolve(url: String) -> Result<String, String> {
+    let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
+    let mut cmd = tokio::process::Command::new(ytdl);
+    cmd.arg("-g")
+        .arg("--no-warnings")
+        .arg("--no-playlist")
+        .arg("-f")
+        .arg("b[protocol^=m3u8][height<=1080]/b[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/b")
+        .arg(&url);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    let out = tokio::time::timeout(std::time::Duration::from_secs(60), cmd.output())
+        .await
+        .map_err(|_| "YouTube resolve timed out".to_string())?
+        .map_err(|e| e.to_string())?;
+    if !out.status.success() {
+        let err = String::from_utf8_lossy(&out.stderr);
+        return Err(err.lines().filter(|l| !l.trim().is_empty()).last().unwrap_or("yt-dlp failed").to_string());
+    }
+    String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .map(|l| l.trim())
+        .find(|l| l.starts_with("http"))
+        .map(|l| l.to_string())
+        .ok_or_else(|| "yt-dlp returned no stream URL".to_string())
+}
+
 /// Report which yt-dlp the app resolves and its version.
 #[tauri::command]
 async fn ytdlp_info() -> Result<YtdlpInfo, String> {
@@ -6055,6 +6088,7 @@ pub fn run() {
             open_external_url,
             ytdlp_info,
             youtube_search,
+            youtube_resolve,
             update_ytdlp,
             spawn_external_player,
             spawn_external_player_reuse,

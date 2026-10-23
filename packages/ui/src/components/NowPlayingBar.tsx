@@ -475,6 +475,8 @@ export function NowPlayingBar({
   // Progress tracking for live TV - updates every second
   const [progress, setProgress] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState('');
+  // Live: elapsed / total of the current EPG programme, counting forward.
+  const [liveClock, setLiveClock] = useState('');
 
   // VOD scrubber state
   const [isHovering, setIsHovering] = useState(false);
@@ -488,6 +490,7 @@ export function NowPlayingBar({
     if (!currentProgram) {
       setProgress(0);
       setTimeRemaining('');
+      setLiveClock('');
       return;
     }
 
@@ -511,6 +514,7 @@ export function NowPlayingBar({
       } else {
         setTimeRemaining(`${remainingMins}m left`);
       }
+      setLiveClock(`${formatTime(Math.max(0, Math.min(elapsed, duration)) / 1000)} / ${formatTime(Math.max(0, duration) / 1000)}`);
     };
 
     updateProgress();
@@ -786,7 +790,7 @@ export function NowPlayingBar({
                     ? formatTime(position)
                     : timeshiftState
                     ? (timeshiftState.behindLive < 5 ? 'LIVE' : 'LIVE')
-                    : (timeRemaining ? `-${timeRemaining}` : 'LIVE')}
+                    : (liveClock || 'LIVE')}
                 </span>
               </div>
             </div>
@@ -1419,7 +1423,7 @@ export function NowPlayingBar({
                             />
                           </div>
                           <span className="npb-time-remaining">
-                            {timeRemaining || '--'}
+                            {liveClock || (position > 0 ? formatTime(position) : 'LIVE')}
                           </span>
                         </>
                       );

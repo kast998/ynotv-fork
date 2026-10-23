@@ -139,6 +139,7 @@ import { ChannelProbeModal } from './components/ChannelProbeModal';
 import { StremioPage } from './components/stremio/StremioPage';import { NuvioPage } from './components/nuvio/NuvioPage';
 import { JellyfinPage } from './components/JellyfinPage';
 import { TVBoxPage } from './components/TVBoxPage';
+import { YouTubePage } from './components/YouTubePage';
 import { useStremioAddonStore } from './stores/stremioAddonStore';
 import { useStremioWatchStore } from './stores/stremioWatchStore';
 import { useStremioAuthStore } from './stores/stremioAuthStore';
@@ -6091,6 +6092,23 @@ function useTmdbPresencePoster(
                   <span>{i18n.t('nav:items.tvbox')}</span>
                 </button>
               )}
+
+              {!navHiddenTabs.includes('youtube') && (
+                <button
+                  className={`segmented-btn ${activeView === 'youtube' ? 'active' : ''}`}
+                  onClick={() => {
+                    setCategoriesOpen(false);
+                    setActiveView(activeView === 'youtube' ? 'none' : 'youtube');
+                  }}
+                  title="YouTube"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2.5 17a24.1 24.1 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.6 49.6 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.1 24.1 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.6 49.6 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
+                    <path d="m10 15 5-3-5-3z" />
+                  </svg>
+                  <span>YouTube</span>
+                </button>
+              )}
             </div>
 
             <div className="unified-divider"></div>
@@ -7386,6 +7404,17 @@ function useTmdbPresencePoster(
       {/* TVBox Page (spider sidecar on localhost) */}
       <TransitionView visible={activeView === 'tvbox'}>
         <TVBoxPage
+          onPlay={(info, targetMode) => {
+            setPlaybackSourceView('movies');
+            handlePlayVodWrapper(info, () => setActiveView('none'), targetMode);
+          }}
+          onClose={() => setActiveView('none')}
+        />
+      </TransitionView>
+
+      {/* YouTube Page (yt-dlp search, mpv ytdl-hook playback) */}
+      <TransitionView visible={activeView === 'youtube'}>
+        <YouTubePage
           onPlay={(info, targetMode) => {
             setPlaybackSourceView('movies');
             handlePlayVodWrapper(info, () => setActiveView('none'), targetMode);

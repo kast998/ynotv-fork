@@ -1212,19 +1212,42 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
     Ok(items)
 }
 
-/// Resolve a YouTube watch URL to one directly playable stream URL.
-/// Prefers YouTube's HLS manifest (muxed audio+video, works in every player
-/// mode), then a muxed progressive format.
-#[tauri::command]
-async fn youtube_resolve(url: String) -> Result<String, String> {
-    let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
+/// Cookie sources tried, in order, when YouTube asks to "confirm you're not a bot".
+/// `cookies.txt` lives at %APPDATA%\\ynotv\\youtube-cookies.txt (or ~/.config/ynotv/).
+fn youtube_cookie_sources(pref: Option<String>) -> Vec<Vec<String>> {
+    let mut out: Vec<Vec<String>> = vec![vec![]];
+    let base = std::env::var("APPDATA")
+        .map(std::path::PathBuf::from)
+        .or_else(|_| std::env::var("HOME").map(|h| std::path::PathBuf::from(h).join(".config")))
+        .ok();
+    let file = base.map(|b| b.join("ynotv").join("youtube-cookies.txt"));
+    let browsers: Vec<String> = match pref.as_deref() {
+        Some(p) if !p.is_empty() && p != "auto" && p != "none" => vec![p.to_string()],
+        Some("none") => vec![],
+        _ => vec!["firefox".into(), "edge".into(), "chrome".into(), "brave".into()],
+    };
+    if let Some(f) = file {
+        if f.exists() {
+            out.push(vec!["--cookies".into(), f.to_string_lossy().to_string()]);
+        }
+    }
+    for br in browsers {
+        out.push(vec!["--cookies-from-browser".into(), br]);
+    }
+    out
+}
+
+async fn youtube_resolve_once(ytdl: &std::path::Path, url: &str, extra: &[String]) -> Result<String, String> {
     let mut cmd = tokio::process::Command::new(ytdl);
     cmd.arg("-g")
         .arg("--no-warnings")
         .arg("--no-playlist")
         .arg("-f")
-        .arg("b[protocol^=m3u8][height<=1080]/b[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/b")
-        .arg(&url);
+        .arg("b[protocol^=m3u8][height<=1080]/b[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/b");
+    for e in extra {
+        cmd.arg(e);
+    }
+    cmd.arg(url);
     #[cfg(target_os = "windows")]
     {
         cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
@@ -1235,7 +1258,13 @@ async fn youtube_resolve(url: String) -> Result<String, String> {
         .map_err(|e| e.to_string())?;
     if !out.status.success() {
         let err = String::from_utf8_lossy(&out.stderr);
-        return Err(err.lines().filter(|l| !l.trim().is_empty()).last().unwrap_or("yt-dlp failed").to_string());
+        return Err(err
+            .lines()
+            .filter(|l| l.contains("ERROR"))
+            .last()
+            .or_else(|| err.lines().filter(|l| !l.trim().is_empty()).last())
+            .unwrap_or("yt-dlp failed")
+            .to_string());
     }
     String::from_utf8_lossy(&out.stdout)
         .lines()
@@ -1243,6 +1272,39 @@ async fn youtube_resolve(url: String) -> Result<String, String> {
         .find(|l| l.starts_with("http"))
         .map(|l| l.to_string())
         .ok_or_else(|| "yt-dlp returned no stream URL".to_string())
+}
+
+/// Resolve a YouTube watch URL to one directly playable stream URL.
+/// Prefers YouTube's HLS manifest (muxed audio+video, works in every player
+/// mode), then a muxed progressive format. On a bot check it retries with
+/// cookies from a cookies.txt file or a signed-in browser.
+#[tauri::command]
+async fn youtube_resolve(url: String, cookies: Option<String>) -> Result<String, String> {
+    let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
+    let ytdl = std::path::PathBuf::from(ytdl);
+    let mut first_err = String::new();
+    let mut tried: Vec<String> = Vec::new();
+    for extra in youtube_cookie_sources(cookies) {
+        match youtube_resolve_once(&ytdl, &url, &extra).await {
+            Ok(u) => return Ok(u),
+            Err(e) => {
+                let bot = e.contains("not a bot") || e.contains("Sign in") || e.contains("cookies");
+                if extra.is_empty() {
+                    first_err = e.clone();
+                    if !bot {
+                        return Err(e);
+                    }
+                } else {
+                    tried.push(format!("{}: {}", extra[1].rsplit(['\\', '/']).next().unwrap_or(""), e));
+                }
+            }
+        }
+    }
+    if tried.is_empty() {
+        Err(first_err)
+    } else {
+        Err(format!("BOTCHECK|{}|{}", first_err, tried.join(" ; ")))
+    }
 }
 
 /// Report which yt-dlp the app resolves and its version.

@@ -1,0 +1,183 @@
+import { useCallback, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import type { VodPlayInfo } from '../types/media';
+import type { VodPlayerMode } from './vod/SplitPlayButton';
+import './TVBoxPage.css';
+import './YouTubePage.css';
+
+/**
+ * YouTube section: search (or paste a channel / playlist / video URL) through the
+ * bundled yt-dlp, then play the watch URL. The embedded mpv player resolves
+ * YouTube itself via its ytdl hook, so no stream URL extraction happens here.
+ */
+
+interface YoutubeItem {
+  id: string;
+  title: string;
+  url: string;
+  channel?: string | null;
+  duration?: number | null;
+  thumbnail?: string | null;
+  viewCount?: number | null;
+  isLive: boolean;
+}
+
+interface YouTubePageProps {
+  onPlay: (info: VodPlayInfo, targetMode?: VodPlayerMode) => void;
+  onClose: () => void;
+}
+
+const HISTORY_KEY = 'ynotv.youtube.history.v1';
+const QUICK = ['热门音乐', '新闻直播', '纪录片', 'lofi live', '电影解说', 'NHK'];
+
+function loadHistory(): string[] {
+  try {
+    const arr = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    return Array.isArray(arr) ? arr.filter((s) => typeof s === 'string').slice(0, 12) : [];
+  } catch {
+    return [];
+  }
+}
+
+function fmtDuration(sec?: number | null): string {
+  if (!sec || sec <= 0) return '';
+  const s = Math.floor(sec % 60);
+  const m = Math.floor((sec / 60) % 60);
+  const h = Math.floor(sec / 3600);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+
+function fmtViews(n?: number | null): string {
+  if (!n) return '';
+  if (n >= 1e8) return `${(n / 1e8).toFixed(1)}亿次观看`;
+  if (n >= 1e4) return `${(n / 1e4).toFixed(1)}万次观看`;
+  return `${n}次观看`;
+}
+
+export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
+  const [q, setQ] = useState('');
+  const [items, setItems] = useState<YoutubeItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastQuery, setLastQuery] = useState<string | null>(null);
+  const [history, setHistory] = useState<string[]>(() => loadHistory());
+
+  const search = useCallback(async (query: string) => {
+    const term = query.trim();
+    if (!term) return;
+    setQ(term);
+    setLoading(true);
+    setError(null);
+    setLastQuery(term);
+    try {
+      const res = await invoke<YoutubeItem[]>('youtube_search', { query: term, limit: 40 });
+      setItems(res);
+      if (res.length === 0) setError('没有结果');
+      setHistory((h) => {
+        const next = [term, ...h.filter((x) => x !== term)].slice(0, 12);
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+        return next;
+      });
+    } catch (e) {
+      setItems([]);
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(
+        msg.includes('not found')
+          ? '没找到 yt-dlp。到 设置 › 关于 › yt-dlp 点更新即可下载。'
+          : `搜索失败：${msg}（如果在国内需要代理才能访问 YouTube）`,
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const play = useCallback((it: YoutubeItem, mode?: VodPlayerMode) => {
+    // A channel or playlist entry: open it as a list instead of playing.
+    if (/youtube\.com\/(@|channel\/|c\/|user\/|playlist\?)/.test(it.url)) {
+      void search(it.url);
+      return;
+    }
+    onPlay({
+      url: it.url,
+      title: it.title,
+      type: 'movie',
+      source_id: 'youtube',
+      mediaId: `youtube:${it.id}`,
+      posterUrl: it.thumbnail || undefined,
+    } as VodPlayInfo, mode);
+  }, [onPlay, search]);
+
+  return (
+    <div className="tvbox-page youtube-page">
+      <div className="tvbox-header">
+        <button className="tvbox-back" onClick={onClose} title="返回">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <h2 className="tvbox-title">YouTube</h2>
+      </div>
+
+      <form
+        className="tvbox-search-form"
+        onSubmit={(e) => { e.preventDefault(); void search(q); }}
+      >
+        <input
+          className="tvbox-input"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="搜索 YouTube，或粘贴视频 / 频道 / 播放列表链接"
+          autoFocus
+        />
+        <button className="tvbox-btn" type="submit" disabled={loading || !q.trim()}>
+          {loading ? '搜索中…' : '搜索'}
+        </button>
+      </form>
+
+      <div className="youtube-chips">
+        {(history.length ? history : QUICK).map((t) => (
+          <button key={t} className="youtube-chip" onClick={() => void search(t)} title={t}>
+            {t.length > 28 ? `${t.slice(0, 28)}…` : t}
+          </button>
+        ))}
+        {history.length > 0 && (
+          <button
+            className="youtube-chip youtube-chip--muted"
+            onClick={() => { setHistory([]); try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ } }}
+          >
+            清除记录
+          </button>
+        )}
+      </div>
+
+      {error && <div className="tvbox-error">{error}</div>}
+      {loading && <div className="tvbox-loading">正在用 yt-dlp 搜索「{lastQuery}」…</div>}
+
+      {!loading && items.length > 0 && (
+        <div className="youtube-grid">
+          {items.map((it) => (
+            <button key={it.id} className="youtube-card" onClick={() => play(it)}>
+              <div className="youtube-thumb-wrap">
+                {it.thumbnail
+                  ? <img className="youtube-thumb" src={it.thumbnail} alt="" loading="lazy" referrerPolicy="no-referrer" />
+                  : <div className="youtube-thumb youtube-thumb--empty" />}
+                {it.isLive
+                  ? <span className="youtube-badge youtube-badge--live">直播</span>
+                  : it.duration ? <span className="youtube-badge">{fmtDuration(it.duration)}</span> : null}
+              </div>
+              <div className="youtube-title" title={it.title}>{it.title}</div>
+              <div className="youtube-meta">
+                {[it.channel, fmtViews(it.viewCount)].filter(Boolean).join(' · ')}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!loading && items.length === 0 && !error && (
+        <div className="tvbox-hint">
+          用内置 yt-dlp 搜索，点视频就用播放器打开（mpv 自动选最高画质）。国内网络需要系统代理。
+        </div>
+      )}
+    </div>
+  );
+}

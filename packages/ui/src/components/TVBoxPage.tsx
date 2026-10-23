@@ -247,7 +247,7 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
           <ul className="tvbox-config-list">
             {configs.map((c) => (
               <li key={c.url} className="tvbox-config-item">
-                <span className="tvbox-config-url" title={c.url}>{c.url}</span>
+                <span className="tvbox-config-url" title={c.url}>{c.url === 'builtin:caiji' ? '内置采集源（量子/非凡/暴风等 12 个，直连 m3u8）' : c.url}</span>
                 <button className="tvbox-btn tvbox-btn--danger" onClick={() => removeConfig(c.url)}>删除</button>
               </li>
             ))}

@@ -8,7 +8,7 @@
 //!   1. bundled JRE at `<resources>/spider-sidecar/jre/bin/javaw.exe`
 //!      (populated by a future jlink step — see windows-package README)
 //!   2. `%JAVA_HOME%/bin/javaw.exe`
-//!   3. `javaw.exe` / `java.exe` on PATH (needs JRE/JDK 17+)
+//!   3. `javaw.exe` / `java.exe` on PATH (needs JRE/JDK 21+; sidecar classes are Java 21 bytecode)
 //!
 //! NOTE: `SpiderService` currently binds all interfaces
 //! (`new InetSocketAddress(port)`); it should bind 127.0.0.1 only to avoid

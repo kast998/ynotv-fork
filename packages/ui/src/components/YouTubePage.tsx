@@ -92,21 +92,40 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     }
   }, []);
 
-  const play = useCallback((it: YoutubeItem, mode?: VodPlayerMode) => {
+  const [resolving, setResolving] = useState<string | null>(null);
+
+  const play = useCallback(async (it: YoutubeItem, mode?: VodPlayerMode) => {
     // A channel or playlist entry: open it as a list instead of playing.
     if (/youtube\.com\/(@|channel\/|c\/|user\/|playlist\?)/.test(it.url)) {
       void search(it.url);
       return;
     }
-    onPlay({
-      url: it.url,
-      title: it.title,
-      type: 'movie',
-      source_id: 'youtube',
-      mediaId: `youtube:${it.id}`,
-      posterUrl: it.thumbnail || undefined,
-    } as VodPlayInfo, mode);
-  }, [onPlay, search]);
+    if (resolving) return;
+    setResolving(it.id);
+    setError(null);
+    try {
+      // Resolve to a direct stream (HLS) so every player mode can open it,
+      // instead of relying on mpv's ytdl hook.
+      const direct = await invoke<string>('youtube_resolve', { url: it.url });
+      onPlay({
+        url: direct,
+        title: it.title,
+        type: 'movie',
+        source_id: 'youtube',
+        mediaId: `youtube:${it.id}`,
+        posterUrl: it.thumbnail || undefined,
+      } as VodPlayInfo, mode);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(
+        /sign in|bot/i.test(msg)
+          ? `YouTube 要求验证（${msg}）。换个代理节点再试。`
+          : `播放解析失败：${msg}。先到 设置 › 关于 › yt-dlp 点更新再试。`,
+      );
+    } finally {
+      setResolving(null);
+    }
+  }, [onPlay, search, resolving]);
 
   return (
     <div className="tvbox-page youtube-page">
@@ -155,7 +174,7 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
       {!loading && items.length > 0 && (
         <div className="youtube-grid">
           {items.map((it) => (
-            <button key={it.id} className="youtube-card" onClick={() => play(it)}>
+            <button key={it.id} className="youtube-card" onClick={() => void play(it)} disabled={!!resolving}>
               <div className="youtube-thumb-wrap">
                 {it.thumbnail
                   ? <img className="youtube-thumb" src={it.thumbnail} alt="" loading="lazy" referrerPolicy="no-referrer" />
@@ -164,7 +183,7 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
                   ? <span className="youtube-badge youtube-badge--live">直播</span>
                   : it.duration ? <span className="youtube-badge">{fmtDuration(it.duration)}</span> : null}
               </div>
-              <div className="youtube-title" title={it.title}>{it.title}</div>
+              <div className="youtube-title" title={it.title}>{resolving === it.id ? '解析中… ' : ''}{it.title}</div>
               <div className="youtube-meta">
                 {[it.channel, fmtViews(it.viewCount)].filter(Boolean).join(' · ')}
               </div>

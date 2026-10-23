@@ -57,21 +57,21 @@ fn main() {
     }
 
     // --- Spider sidecar: ensure a JRE is bundled (Windows) ---
-    // Downloads Temurin 17 JRE once per fresh build so the TVBox spider
+    // Downloads Temurin 21 JRE once per fresh build so the TVBox spider
     // sidecar is truly self-contained (no system Java required).
     if target_os == "windows" {
         let jre_dir = manifest.join("spider-sidecar").join("jre");
         let javaw = jre_dir.join("bin").join("javaw.exe");
         println!("cargo:rerun-if-changed=spider-sidecar/jre");
         if !javaw.is_file() {
-            println!("cargo:warning=Spider sidecar JRE missing, downloading Temurin 17 JRE...");
+            println!("cargo:warning=Spider sidecar JRE missing, downloading Temurin 21 JRE...");
             let jre_target = jre_dir.to_string_lossy().replace("/", "\\");
             let ps_template = r#"
 $ErrorActionPreference = 'Stop'
 $zip = "$env:TEMP\ynotv-jre.zip"
 $dst = "$env:TEMP\ynotv-jre-extract"
 if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
-Invoke-WebRequest -Uri "https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jre/hotspot/normal/eclipse" -OutFile $zip
+Invoke-WebRequest -Uri "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jre/hotspot/normal/eclipse" -OutFile $zip
 Expand-Archive -Path $zip -DestinationPath $dst -Force
 $src = Get-ChildItem $dst -Directory | Select-Object -First 1
 $target = "JRE_TARGET_PLACEHOLDER"
@@ -85,7 +85,7 @@ if (-not (Test-Path "$target\bin\javaw.exe")) { throw "JRE download/extract fail
                 .output();
             match out {
                 Ok(o) if o.status.success() => {
-                    println!("cargo:warning=Temurin JRE 17 bundled for spider sidecar.");
+                    println!("cargo:warning=Temurin JRE 21 bundled for spider sidecar.");
                 }
                 Ok(o) => {
                     println!(

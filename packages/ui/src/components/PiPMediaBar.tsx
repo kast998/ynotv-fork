@@ -171,7 +171,7 @@ export function PiPMediaBar({
                 </div>
               )}
             </div>
-            <span className="pip-time">{formatTime(ts ? ts.behindLive : Math.max(0, duration - position))}</span>
+            <span className="pip-time">{ts ? new Date(Date.now() - ts.behindLive * 1000).toLocaleTimeString('zh-CN', { hour12: false }) : formatTime(position)}</span>
           </>
         )}
 

@@ -58,7 +58,8 @@ function fmtViews(n?: number | null): string {
 function describeYtError(msg: string, what: string): string {
   if (msg.startsWith('BOTCHECK|') || /not a bot|sign in/i.test(msg)) {
     return 'YouTube 要求登录验证（当前网络被判为机器人）。点搜索按钮旁的“登录 YouTube”，在弹出窗口登录后点“保存登录”，再点视频即可。'+
-      '若已保存过仍出现，说明登录已过期，重新登录保存一次。';
+      '若已保存过仍出现，说明登录已过期，重新登录保存一次。' +
+      `\n详细信息：${msg.replace(/^BOTCHECK\|/, '').replace(/\|/g, ' ; ')}`;
   }
   return `${what}：${msg}。先到 设置 › 关于 › yt-dlp 点更新再试。`;
 }
@@ -229,7 +230,7 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
         )}
       </div>
 
-      {error && <div className="tvbox-error">{error}</div>}
+      {error && <div className="tvbox-error" style={{ whiteSpace: 'pre-wrap', userSelect: 'text' }}>{error}</div>}
       {loading && <div className="tvbox-loading">正在用 yt-dlp 搜索「{lastQuery}」…</div>}
 
       {!loading && items.length > 0 && (

@@ -1215,7 +1215,7 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
 /// Cookie sources tried, in order, when YouTube asks to "confirm you're not a bot".
 /// `cookies.txt` lives at %APPDATA%\\ynotv\\youtube-cookies.txt (or ~/.config/ynotv/).
 fn youtube_cookie_sources(pref: Option<String>) -> Vec<Vec<String>> {
-    let mut out: Vec<Vec<String>> = vec![vec![]];
+    let mut out: Vec<Vec<String>> = Vec::new();
     let base = std::env::var("APPDATA")
         .map(std::path::PathBuf::from)
         .or_else(|_| std::env::var("HOME").map(|h| std::path::PathBuf::from(h).join(".config")))
@@ -1231,10 +1231,67 @@ fn youtube_cookie_sources(pref: Option<String>) -> Vec<Vec<String>> {
             out.push(vec!["--cookies".into(), f.to_string_lossy().to_string()]);
         }
     }
+    out.push(vec![]);
     for br in browsers {
         out.push(vec!["--cookies-from-browser".into(), br]);
     }
     out
+}
+
+/// The proxy yt-dlp should use: an explicit HTTP(S)_PROXY env var wins (yt-dlp
+/// reads it itself), otherwise the Windows system proxy (what the browser and
+/// the login window use), which yt-dlp does not pick up on its own. Using the
+/// same exit IP as the login window keeps the saved YouTube session valid.
+async fn youtube_proxy_args() -> Vec<String> {
+    for k in ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "ALL_PROXY", "all_proxy"] {
+        if std::env::var(k).map(|v| !v.is_empty()).unwrap_or(false) {
+            return vec![];
+        }
+    }
+    #[cfg(target_os = "windows")]
+    {
+        let key = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings";
+        let mut cmd = tokio::process::Command::new("reg");
+        cmd.args(["query", key]);
+        cmd.creation_flags(0x08000000);
+        if let Ok(out) = cmd.output().await {
+            let text = String::from_utf8_lossy(&out.stdout).to_string();
+            let val = |name: &str| -> Option<String> {
+                text.lines().find_map(|l| {
+                    let mut it = l.split_whitespace();
+                    if it.next()? == name {
+                        let _ty = it.next()?;
+                        Some(it.collect::<Vec<_>>().join(" "))
+                    } else {
+                        None
+                    }
+                })
+            };
+            let enabled = val("ProxyEnable").map(|v| v.trim() == "0x1").unwrap_or(false);
+            if let (true, Some(server)) = (enabled, val("ProxyServer")) {
+                let server = server.trim().to_string();
+                let pick = if server.contains('=') {
+                    let parts: Vec<(String, String)> = server
+                        .split(';')
+                        .filter_map(|p| p.split_once('=').map(|(a, b)| (a.trim().to_lowercase(), b.trim().to_string())))
+                        .collect();
+                    let get = |k: &str| parts.iter().find(|(a, _)| a == k).map(|(_, b)| b.clone());
+                    get("https").or_else(|| get("http")).map(|v| format!("http://{v}"))
+                        .or_else(|| get("socks").map(|v| format!("socks5://{v}")))
+                } else if server.contains("://") {
+                    Some(server.clone())
+                } else if !server.is_empty() {
+                    Some(format!("http://{server}"))
+                } else {
+                    None
+                };
+                if let Some(p) = pick {
+                    return vec!["--proxy".into(), p];
+                }
+            }
+        }
+    }
+    vec![]
 }
 
 async fn youtube_resolve_once(ytdl: &std::path::Path, url: &str, extra: &[String]) -> Result<String, String> {
@@ -1246,6 +1303,9 @@ async fn youtube_resolve_once(ytdl: &std::path::Path, url: &str, extra: &[String
         .arg("b[protocol^=m3u8][height<=1080]/b[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bv*[height<=1080]+ba/bv*+ba/b");
     for e in extra {
         cmd.arg(e);
+    }
+    for p in youtube_proxy_args().await {
+        cmd.arg(p);
     }
     cmd.arg(url);
     #[cfg(target_os = "windows")]
@@ -1306,10 +1366,11 @@ async fn youtube_resolve(url: String, cookies: Option<String>) -> Result<String,
             }
         }
     }
+    let proxy = youtube_proxy_args().await.get(1).cloned().unwrap_or_else(|| "无（直连或环境变量）".into());
     if tried.is_empty() {
-        Err(first_err)
+        Err(format!("{} [代理: {}]", first_err, proxy))
     } else {
-        Err(format!("BOTCHECK|{}|{}", first_err, tried.join(" ; ")))
+        Err(format!("BOTCHECK|{}|{} [代理: {}]", first_err, tried.join(" ; "), proxy))
     }
 }
 

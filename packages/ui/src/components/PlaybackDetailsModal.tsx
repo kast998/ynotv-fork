@@ -13,7 +13,7 @@ import './PlaybackDetailsModal.css';
 export interface PlaybackDetailsModalProps {
   open: boolean;
   onClose: () => void;
-  playbackSourceView?: 'movies' | 'series' | 'dvr' | 'stremio' | 'nuvio' | 'jellyfin' | null;
+  playbackSourceView?: 'movies' | 'series' | 'dvr' | 'stremio' | 'nuvio' | 'jellyfin' | 'youtube' | 'tvbox' | null;
   stremioMeta?: StremioMeta | null;
   vodInfo?: VodPlayInfo | null;
   currentEpisode?: StremioVideo | null;

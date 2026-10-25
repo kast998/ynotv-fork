@@ -1144,7 +1144,7 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
     if q.is_empty() {
         return Ok(vec![]);
     }
-    let target = if q.starts_with("http://") || q.starts_with("https://") {
+    let target = if q.starts_with("http://") || q.starts_with("https://") || q.starts_with(":yt") {
         q.to_string()
     } else {
         format!("ytsearch{}:{}", n, q)
@@ -1154,8 +1154,21 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
         .arg("-J")
         .arg("--no-warnings")
         .arg("--playlist-end")
-        .arg(n.to_string())
-        .arg(&target);
+        .arg(n.to_string());
+    // Personal feeds (:ytrec recommended, :ytsubs subscriptions, :ythis history)
+    // need the saved login, through the same exit IP as the login window.
+    if q.starts_with(":yt") {
+        match youtube_cookie_file().filter(|f| f.exists()) {
+            Some(f) => {
+                cmd.arg("--cookies").arg(f);
+            }
+            None => return Err("NEEDLOGIN".to_string()),
+        }
+        for p in youtube_proxy_args().await {
+            cmd.arg(p);
+        }
+    }
+    cmd.arg(&target);
     #[cfg(target_os = "windows")]
     {
         cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW

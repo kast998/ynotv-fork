@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import type { VodPlayInfo } from '../types/media';
 import type { VodPlayerMode } from './vod/SplitPlayButton';
@@ -64,6 +64,12 @@ function describeYtError(msg: string, what: string): string {
   return `${what}：${msg}。先到 设置 › 关于 › yt-dlp 点更新再试。`;
 }
 
+const FEEDS = [
+  { key: ':ytrec', label: '推荐' },
+  { key: ':ytsubs', label: '订阅' },
+  { key: ':ythis', label: '历史' },
+];
+
 export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
   const [q, setQ] = useState('');
   const [items, setItems] = useState<YoutubeItem[]>([]);
@@ -76,6 +82,7 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     const term = query.trim();
     if (!term) return;
     setQ(term);
+    setFeed(null);
     setLoading(true);
     setError(null);
     setLastQuery(term);
@@ -96,6 +103,30 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
       setLoading(false);
     }
   }, []);
+
+  const [feed, setFeed] = useState<string | null>(null);
+  const loadFeed = useCallback(async (kind: string, quiet = false) => {
+    setFeed(kind);
+    setLoading(true);
+    setError(null);
+    setLastQuery(FEEDS.find((f) => f.key === kind)?.label ?? kind);
+    try {
+      const res = await invoke<YoutubeItem[]>('youtube_search', { query: kind, limit: 48 });
+      setItems(res);
+      if (res.length === 0 && !quiet) setError('这里暂时没有内容');
+    } catch (e) {
+      setItems([]);
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes('NEEDLOGIN')) {
+        if (!quiet) setError('推荐和订阅需要先登录：点右上“登录 YouTube”，登录后点“保存登录”。');
+      } else {
+        setError(describeYtError(msg, '加载失败'));
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => { void loadFeed(':ytrec', true); }, [loadFeed]);
 
   const [resolving, setResolving] = useState<string | null>(null);
   const [cookies, setCookies] = useState<string>(() => {
@@ -124,7 +155,8 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
       const n = await invoke<number>('youtube_login_save');
       setLoginOpen(false);
       changeCookies('auto');
-      setNotice(`已保存 YouTube 登录（${n} 个 cookie），现在点视频试试。`);
+      setNotice(`已保存 YouTube 登录（${n} 个 cookie）。`);
+      void loadFeed(':ytrec');
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -215,6 +247,18 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
       )}
 
       <div className="youtube-chips">
+        {FEEDS.map((f) => (
+          <button
+            key={f.key}
+            className="youtube-chip"
+            style={feed === f.key ? { background: '#e33', color: '#fff', borderColor: '#e33' } : undefined}
+            onClick={() => void loadFeed(f.key)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      <div className="youtube-chips">
         {(history.length ? history : QUICK).map((t) => (
           <button key={t} className="youtube-chip" onClick={() => void search(t)} title={t}>
             {t.length > 28 ? `${t.slice(0, 28)}…` : t}
@@ -231,7 +275,7 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
       </div>
 
       {error && <div className="tvbox-error" style={{ whiteSpace: 'pre-wrap', userSelect: 'text' }}>{error}</div>}
-      {loading && <div className="tvbox-loading">正在用 yt-dlp 搜索「{lastQuery}」…</div>}
+      {loading && <div className="tvbox-loading">{feed ? `正在加载${lastQuery}…` : `正在用 yt-dlp 搜索「${lastQuery}」…`}</div>}
 
       {!loading && items.length > 0 && (
         <div className="youtube-grid">

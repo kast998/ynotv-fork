@@ -1294,7 +1294,82 @@ async fn youtube_proxy_args() -> Vec<String> {
     vec![]
 }
 
+/// yt-dlp needs a JavaScript runtime to solve YouTube's player challenges;
+/// without one a signed-in session sees no playable formats ("Requested format
+/// is not available"). Use deno/node/bun from PATH, else a deno.exe the app
+/// downloads once into %APPDATA%\ynotv\bin.
+async fn youtube_js_runtime_args() -> Vec<String> {
+    #[cfg(target_os = "windows")]
+    {
+        for name in ["deno", "node", "bun"] {
+            let mut cmd = tokio::process::Command::new("where");
+            cmd.arg(name);
+            cmd.creation_flags(0x08000000);
+            if let Ok(out) = cmd.output().await {
+                if out.status.success() {
+                    if let Some(p) = String::from_utf8_lossy(&out.stdout).lines().next() {
+                        let p = p.trim();
+                        if !p.is_empty() {
+                            return vec!["--js-runtimes".into(), format!("{name}:{p}")];
+                        }
+                    }
+                }
+            }
+        }
+        let Ok(appdata) = std::env::var("APPDATA") else { return vec![] };
+        let dir = std::path::PathBuf::from(appdata).join("ynotv").join("bin");
+        let deno = dir.join("deno.exe");
+        if !deno.exists() {
+            let _ = std::fs::create_dir_all(&dir);
+            let zip = dir.join("deno.zip");
+            let url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip";
+            let ok = async {
+                let client = reqwest::Client::builder()
+                    .timeout(std::time::Duration::from_secs(180))
+                    .build()
+                    .ok()?;
+                let bytes = client.get(url).send().await.ok()?.error_for_status().ok()?.bytes().await.ok()?;
+                std::fs::write(&zip, &bytes).ok()?;
+                let mut cmd = tokio::process::Command::new("powershell");
+                cmd.args([
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command",
+                    &format!(
+                        "Expand-Archive -LiteralPath '{}' -DestinationPath '{}' -Force",
+                        zip.display(),
+                        dir.display()
+                    ),
+                ]);
+                cmd.creation_flags(0x08000000);
+                cmd.output().await.ok()?;
+                Some(())
+            }
+            .await;
+            let _ = std::fs::remove_file(&zip);
+            if ok.is_none() || !deno.exists() {
+                return vec![];
+            }
+        }
+        return vec!["--js-runtimes".into(), format!("deno:{}", deno.display())];
+    }
+    #[allow(unreachable_code)]
+    vec![]
+}
+
 async fn youtube_resolve_once(ytdl: &std::path::Path, url: &str, extra: &[String]) -> Result<String, String> {
+    let js = if extra.is_empty() { vec![] } else { youtube_js_runtime_args().await };
+    match youtube_resolve_run(ytdl, url, extra, &js).await {
+        // Older yt-dlp builds don't know --js-runtimes: retry without it.
+        Err(e) if !js.is_empty() && (e.contains("no such option") || e.contains("js-runtimes")) => {
+            youtube_resolve_run(ytdl, url, extra, &[]).await
+                .map_err(|e2| format!("{e2}（yt-dlp 版本过旧，请在设置里更新 yt-dlp）"))
+        }
+        r => r,
+    }
+}
+
+async fn youtube_resolve_run(ytdl: &std::path::Path, url: &str, extra: &[String], js: &[String]) -> Result<String, String> {
     let mut cmd = tokio::process::Command::new(ytdl);
     cmd.arg("-g")
         .arg("--no-warnings")
@@ -1306,6 +1381,9 @@ async fn youtube_resolve_once(ytdl: &std::path::Path, url: &str, extra: &[String
     }
     for p in youtube_proxy_args().await {
         cmd.arg(p);
+    }
+    for a in js {
+        cmd.arg(a);
     }
     cmd.arg(url);
     #[cfg(target_os = "windows")]

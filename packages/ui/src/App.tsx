@@ -1184,7 +1184,7 @@ function App() {
   }, []);
 
   // Playback source view state to know where to go back when stopped
-  const [playbackSourceView, setPlaybackSourceView] = useState<'movies' | 'series' | 'dvr' | 'stremio' | 'nuvio' | 'jellyfin' | null>(null);
+  const [playbackSourceView, setPlaybackSourceView] = useState<'movies' | 'series' | 'dvr' | 'stremio' | 'nuvio' | 'jellyfin' | 'youtube' | 'tvbox' | null>(null);
   const [showPlaybackDetailsModal, setShowPlaybackDetailsModal] = useState(false);
   const [sourcePickerParams, setSourcePickerParams] = useState<{
     source: 'stremio' | 'nuvio';
@@ -7405,7 +7405,7 @@ function useTmdbPresencePoster(
       <TransitionView visible={activeView === 'tvbox'}>
         <TVBoxPage
           onPlay={(info, targetMode) => {
-            setPlaybackSourceView('movies');
+            setPlaybackSourceView('tvbox');
             handlePlayVodWrapper(info, () => setActiveView('none'), targetMode);
           }}
           onClose={() => setActiveView('none')}
@@ -7413,10 +7413,10 @@ function useTmdbPresencePoster(
       </TransitionView>
 
       {/* YouTube Page (yt-dlp search, mpv ytdl-hook playback) */}
-      <TransitionView visible={activeView === 'youtube'}>
+      <TransitionView visible={activeView === 'youtube'} keepMounted>
         <YouTubePage
           onPlay={(info, targetMode) => {
-            setPlaybackSourceView('movies');
+            setPlaybackSourceView('youtube');
             handlePlayVodWrapper(info, () => setActiveView('none'), targetMode);
           }}
           onClose={() => setActiveView('none')}

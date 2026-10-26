@@ -27,6 +27,10 @@ YOUTUBE = {
     "style": {"type": "rect", "ratio": 1.78},
     "ext": {"hl": "zh-HK", "gl": "HK"},
 }
+EXTRAS = [
+    ("摸鱼", "https://0.wudaozhe.net/tvbox/摸鱼.json"),
+    ("AIWEX", "https://9280.kstore.vip/aiwex.json"),
+]
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -34,7 +38,8 @@ def idna(url):
     p = urllib.parse.urlsplit(url)
     host = p.hostname.encode("idna").decode()
     netloc = host + (f":{p.port}" if p.port else "")
-    return urllib.parse.urlunsplit((p.scheme, netloc, p.path, p.query, p.fragment))
+    path = urllib.parse.quote(p.path, safe="/%")
+    return urllib.parse.urlunsplit((p.scheme, netloc, path, p.query, p.fragment))
 
 
 def fetch(url):
@@ -109,6 +114,34 @@ def load_fty():
     return None
 
 
+def load_extra(label, url):
+    try:
+        final, raw = fetch(url)
+        cfg = parse(decode(final, raw))
+    except Exception as e:
+        print(f"{label}: {e}")
+        return None
+    if not isinstance(cfg, dict) or not cfg.get("sites"):
+        print(f"{label}: no sites")
+        return None
+    spider = cfg.get("spider", "")
+    sites = []
+    for site in cfg["sites"]:
+        site = dict(site)
+        if spider and not site.get("jar") and site.get("type") == 3 and not str(site.get("api", "")).startswith(("http", "./", "../")) and not str(site.get("api", "")).endswith((".js", ".py")):
+            site["jar"] = spider
+        site["key"] = f"{label}_{site.get('key', site.get('name', ''))}"
+        site["name"] = f"[{label}] {site.get('name', '')}"
+        sites.append(site)
+    lives = []
+    for live in cfg.get("lives", []) or []:
+        live = dict(live)
+        live["name"] = f"[{label}] {live.get('name', '')}"
+        lives.append(live)
+    print(f"ok {label} -> {final}: {len(sites)} sites, {len(lives)} lives")
+    return sites, lives
+
+
 def write(name, cfg):
     with open(os.path.join(HERE, name), "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=1)
@@ -118,11 +151,37 @@ def main():
     write("youtube.json", {"sites": [YOUTUBE]})
     cfg = load_fty()
     if cfg is None:
-        if os.path.exists(os.path.join(HERE, "ynotv.json")):
-            print("饭太硬 unreachable; keeping previous ynotv.json")
-            return
-        cfg = {"sites": []}
-    cfg["sites"] = [YOUTUBE] + [s for s in cfg["sites"] if s.get("key") != YOUTUBE["key"]]
+        try:
+            cfg = json.load(open(os.path.join(HERE, "ynotv.json"), encoding="utf-8"))
+            labels = tuple(f"{label}_" for label, _ in EXTRAS)
+            tags = tuple(f"[{label}]" for label, _ in EXTRAS)
+            cfg["sites"] = [x for x in cfg.get("sites", []) if not str(x.get("key", "")).startswith(labels)]
+            cfg["lives"] = [x for x in cfg.get("lives", []) if not str(x.get("name", "")).startswith(tags)]
+            print("饭太硬 unreachable; reusing previous 饭太硬 part")
+        except Exception:
+            cfg = {"sites": []}
+    sites = [YOUTUBE] + [s for s in cfg["sites"] if s.get("key") != YOUTUBE["key"]]
+    lives = list(cfg.get("lives", []) or [])
+    old = {}
+    try:
+        prev = json.load(open(os.path.join(HERE, "ynotv.json"), encoding="utf-8"))
+        for label, _ in EXTRAS:
+            old[label] = ([x for x in prev.get("sites", []) if str(x.get("key", "")).startswith(label + "_")],
+                          [x for x in prev.get("lives", []) if str(x.get("name", "")).startswith(f"[{label}]")])
+    except Exception:
+        pass
+    for label, url in EXTRAS:
+        got = load_extra(label, url) or old.get(label)
+        if got:
+            sites += got[0]
+            lives += got[1]
+    seen, uniq = set(), []
+    for live in lives:
+        u = live.get("url") or live.get("api") or live.get("name")
+        if u in seen: continue
+        seen.add(u); uniq.append(live)
+    cfg["sites"] = sites
+    cfg["lives"] = uniq
     write("ynotv.json", cfg)
 
 

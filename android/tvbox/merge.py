@@ -20,7 +20,7 @@ YOUTUBE = {
     "key": "ynotv_youtube",
     "name": "▶ YouTube",
     "type": 3,
-    "api": "https://ghfast.top/https://raw.githubusercontent.com/kast998/ynotv-fork/main/android/tvbox/youtube.js?v=4",
+    "api": "https://ghfast.top/https://raw.githubusercontent.com/kast998/ynotv-fork/main/android/tvbox/youtube.js?v=5",
     "searchable": 1,
     "quickSearch": 1,
     "changeable": 0,

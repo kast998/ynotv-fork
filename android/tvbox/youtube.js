@@ -180,12 +180,15 @@ function createSpider(site = {}) {
     function home(filter) {
         const list = (loggedIn() ? FEEDS : []).concat(classes);
         const cls = list.map(([name, q]) => ({type_id: q, type_name: name}));
-        cls.push({type_id: ACCOUNT, type_name: loggedIn() ? "账号" : "登录"});
+        if (loggedIn()) cls.push({type_id: ACCOUNT, type_name: "账号"});
+        else cls.unshift({type_id: ACCOUNT, type_name: "登录"});
         return {class: cls};
     }
 
     async function homeVod() {
-        try { return {list: (await query(loggedIn() ? FEEDS[0][1] : classes[0][1], "1")).list}; } catch (e) { return {list: []}; }
+        let list = [];
+        try { list = (await query(loggedIn() ? FEEDS[0][1] : classes[0][1], "1")).list; } catch (e) { }
+        return {list: loggedIn() ? list : [loginCard()].concat(list)};
     }
 
     async function category(tid, pg, filter, extend) {

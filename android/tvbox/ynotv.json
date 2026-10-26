@@ -639,6 +639,2337 @@
    "searchable": 1,
    "quickSearch": 0,
    "changeable": 0
+  },
+  {
+   "key": "摸鱼_Douban",
+   "name": "[摸鱼] 🌕️┆片单┆精选",
+   "type": 3,
+   "api": "csp_PianDan",
+   "searchable": 1,
+   "indexs": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": {
+    "home": {
+     "douban": "https://tc-new.z.wiki/autoupload/k2fxc/20260918/r68R/douban.json",
+     "tmdb": "https://tc-new.z.wiki/autoupload/k2fxc/20260918/yAKC/tmdb.json"
+    }
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_YGP",
+   "name": "[摸鱼] 🔔┆新片┆预告",
+   "type": 3,
+   "api": "csp_YGP",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_FishConfig",
+   "name": "[摸鱼] 🍼┆设置┆中心",
+   "type": 3,
+   "api": "csp_FishConfig",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Local",
+   "name": "[摸鱼] 📁┆文件┆浏览",
+   "type": 3,
+   "api": "csp_Local",
+   "searchable": 0,
+   "changeable": 0,
+   "indexs": 0,
+   "style": {
+    "type": "list"
+   },
+   "ext": "https://tc-new.z.wiki/autoupload/k2fxc/20260918/VbeD/share.json",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_ALLLive",
+   "name": "[摸鱼] 🌟┆星河┆共影",
+   "type": 3,
+   "api": "csp_ALLLive",
+   "searchable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_bili",
+   "name": "[摸鱼] 🎨┆笔触┆琉璃",
+   "type": 3,
+   "api": "csp_Bili",
+   "searchable": 1,
+   "quickSearch": 1,
+   "ext": {
+    "cookie": ""
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_FishPs",
+   "name": "[摸鱼] 🐟┆鱼鱼┆盘搜",
+   "type": 3,
+   "api": "csp_FishPs",
+   "searchable": 1,
+   "filterable": 0,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Wogg",
+   "name": "[摸鱼] 👽️┆玩偶┆4K",
+   "type": 3,
+   "api": "csp_Wogg",
+   "searchable": 1,
+   "changeable": 1,
+   "filterable": 1,
+   "ext": {
+    "site": [
+     "https://wogg.xxooo.cf",
+     "https://woggpan.888484.xyz",
+     "https://www.wogg.live",
+     "http://woggpan.xxooo.cf"
+    ],
+    "filter": "https://tc-new.z.wiki/autoupload/iYHTWVx6T8RrCmqdGD6MOdiO_OyvX7mIgxFBfDMDErs/20260320/oOf4/wogg.json"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_FishMuou",
+   "name": "[摸鱼] 🪵┆木偶┆4K",
+   "type": 3,
+   "api": "csp_FishCloud",
+   "searchable": 1,
+   "ext": {
+    "site": [
+     "https://www.muoua.top",
+     "https://333.333291.xyz",
+     "https://666.666291.xyz"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_KaiFan",
+   "name": "[摸鱼] 🍚┆开饭┆4K",
+   "type": 3,
+   "api": "csp_KaiFan",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "http:///AfLGR2SW/7tjQA3K8Qgg5u7AG1NNWsCVAVxfMv/V44kP5aqzon5weT9IvX2w2KtBeMpAxc+Y0yRLN0eXf6oiuLw=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_TangPing",
+   "name": "[摸鱼] 🛋️┆躺平┆4K",
+   "type": 3,
+   "api": "csp_TangPing",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "http:///AUVdS2Q3l8yS7JhOkMXYE1ntTJ/61k8MzQmaQMqSZBbUKDBy/udxVLxvXhNDvifvbkVTEawL3m2p9hhwbTibxnA=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_LaiChuang",
+   "name": "[摸鱼] 🛏️┆赖床┆4K",
+   "type": 3,
+   "api": "csp_LaiChuang",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "http:///AVlJ4J+D/3DMzdKAQnig/9ckDSQU7H+PyPyOE/q+m7eGkaZ9YjDkVXgq17TjYCHuvJa0UinsvgwPiAVd51fKuA0=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_bandeng",
+   "name": "[摸鱼] 🌾┆板凳┆4K",
+   "type": 3,
+   "api": "csp_BanDeng",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "http:///ASH3HkV5cxNhNR9+uQe0sWYxUWHzEywHT3rcYOx+wsK4Jx+sBd0qMO9kFic1Rc1osAMsAsTlMgabd1Ky2kmzQ/Y=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_mandian",
+   "name": "[摸鱼] 🐢┆慢点┆4K",
+   "type": 3,
+   "api": "csp_ManDian",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "http:///AU08qHcswQQ9GUNUYMdLgyq8HzPCy1gUxku0nrQgOwfSJrT0LgwdrXoWPVK+x4n+QQ8KbuVPdzA5/U2YL7fQmH8=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_bl",
+   "name": "[摸鱼] 🤪┆摆烂┆4K",
+   "type": 3,
+   "api": "csp_App88",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "AaS+rL6EXhyvk8kjx88vlhuoYDJVmN5DsnAVOsk5czv2bwkZzheDDKql32lVf6q85wzRh5PjXcFBwpnie3x9mhA=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_ZhiWo",
+   "name": "[摸鱼] 🌙┆知我┆4K",
+   "type": 3,
+   "api": "csp_ZhiWo",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "http:///AX1Vvf8Pdib7pGaiG52YtJfoH7J54wUt+/pfCo7QJrhIKMK6XXxVbbJG3pw3yHdOUVcBrTyo1EmM8M91pY30AUE=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_xiaozuo",
+   "name": "[摸鱼] 🍃┆等风┆4K",
+   "type": 3,
+   "api": "csp_DengFeng",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "http:///ARRavWPOi7W2Usqhe54R+NW2sQ6CCBOYajU9bIz/WVyF75mrlP6UsAbts+o/eKOpDWbngYFUGIJGTa56hr3Hk0=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_KanJu",
+   "name": "[摸鱼] 🎬┆流映┆4K",
+   "type": 3,
+   "api": "csp_KanJu",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "changeable": 1,
+   "ext": {
+    "site": "https://kanju.ai",
+    "playname": "ly"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_素笺",
+   "name": "[摸鱼] 📜┆素笺┆4K",
+   "type": 3,
+   "api": "csp_NiuLai",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 0,
+   "ext": "http:///Aaf7w5/rzYE9yZfGXQS8eAKVq3W9pLaxvlvi6ZGZLpR8O3YSm7sXFS22QD04sh5rKbTiwymnUVmJuU564xlueIWO8sp8Q1lhlLJThJy5Yert",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_长泽",
+   "name": "[摸鱼] 😗┆长泽┆4K",
+   "type": 3,
+   "api": "csp_App88",
+   "ext": "http:///AbUqYzi9KxmcqEBrph2PStNUDPxq/XlzxDHJ/Ho29gXr8NgMOEJGFKBsrdYb5xNb+w+Xaj3203DI9YWo5wBv6zGULMNZneW1yESyfC1/S1BM",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_云岫",
+   "name": "[摸鱼] ☁️┆云岫┆4K",
+   "type": 3,
+   "api": "csp_NiuLai",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 0,
+   "ext": "http:///Af9dBxsQCjGtIKQ47cJEAnzHtmsGI04C7DCRpNBZk7hshaMWsb76puB4aGapQk4JgYpBV2BKnAQ6GRcUI+/vzYduXc8ItUUvkHR/+LR3Y+NT",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_zhiqiu",
+   "name": "[摸鱼] ☘️┆听风┆知秋",
+   "type": 3,
+   "api": "csp_zhiqiu",
+   "searchable": 1,
+   "ext": "http:///ATuDzsbtXNA1mpnRWIpcUB8B2+hY3LMP/3Z1xXurADboE8cAKUOjUN6TXimsApauJg/X7yLotzgNXhCsjAn5wuQ=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_fishhxq",
+   "name": "[摸鱼] 💃┆韩圈┆影视",
+   "type": 3,
+   "api": "csp_FishHxq",
+   "searchable": 1,
+   "ext": "http:///AfEuiKVYhFJoZfX14qKZ6B/GuVuuG1J+2u0TrTgQMlT+T6fw+zkIdP0NTr6BT3Oa5aQs8EIbxPwjpG7UH/U75WM=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Kan360",
+   "name": "[摸鱼] 🫐┆三六┆影视",
+   "type": 3,
+   "api": "csp_Kan360",
+   "searchable": 1,
+   "filterable": 1,
+   "ext": {
+    "filter": "https://tc-new.z.wiki/autoupload/k2fxc/20260918/8aF9/360.json",
+    "fishjx": [
+     "https://jx.xmflv.com/?url="
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Rebo",
+   "name": "[摸鱼] 🍓┆热播┆APP",
+   "type": 3,
+   "api": "csp_AppRJ",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0,
+   "ext": {
+    "url": "http://v.rbotv.cn"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_三秋影视",
+   "name": "[摸鱼] 🍂┆三秋┆APP",
+   "type": 3,
+   "api": "csp_App3Q",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0,
+   "ext": "http:///AWbn5kTXI16R4Cr+RX4aHt0T+030j7BuQXZ0VHk8l3hKv+5UxjC4Ssjj/nyFAW+NCs8Pu72w7WrsQ1hQduHbfNE=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_马猴影视",
+   "name": "[摸鱼] 🐒┆马猴┆APP",
+   "type": 3,
+   "api": "csp_App3Q",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0,
+   "ext": "http:///Aalts9S0kZVe1LnLnDkMQZgi4p/BQkgyXW3CiozzZwpXllkvgFr5ojgmcjYPyW+qWPP9aDwMqWoI7WYz/y7OXcc=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_星澜",
+   "name": "[摸鱼] 🌌┆星澜┆APP",
+   "type": 3,
+   "api": "csp_NiuLai",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 0,
+   "ext": "http:///AfOEx4Xw7b+FHm/68xw9/lZWy8xM/OLcY5h9FHwA2IgFua44tuuISikGbVerA833yP5nIZh+Jj6ZR+3PnpErsJm4+VBlVVEvIPDhjrx+HB/Lfjty5u+JKHoniwcTCyQBZQ==",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_竹隐",
+   "name": "[摸鱼] 🎋┆竹隐┆APP",
+   "type": 3,
+   "api": "csp_NiuLai",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 0,
+   "ext": "http:///ASOaI+0HH0pDfWQ9VwPhMaOaO+WarJ6umTa/qwrJ+cbO4qRPAyjfTVh51M3iYZq/nEN+givTp7FLvjhWgQh8WCdjm82k8bbHm80C9j41tlvo",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_玉阶",
+   "name": "[摸鱼] 🏛️┆玉阶┆APP",
+   "type": 3,
+   "api": "csp_NiuLai",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 0,
+   "ext": "http:///AR1skS0Mq97cRrUjisQHhwxFfgXFonkw2eX4zfToon+DcScGRXGViBnNIsG5DYOtYkAp0CTia3vGvMluKl75/eMH49CGi2ZWYJa1wyldHjNH",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_香篆",
+   "name": "[摸鱼] 🪔┆香篆┆APP",
+   "type": 3,
+   "api": "csp_NiuLai",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 0,
+   "ext": "http:///AYVQFckfgSMV740pmmoXzEeC6ljk5SNI/vhWnsIgCUWttSOCyil7DK8MLbeYpwWSgUvM0jcGIDuwi43iiO0FSFX1ofrxXH3IU944OtJbNlpMo9hvLoJTJ2RQVjWu3HU58w==",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_兰芷",
+   "name": "[摸鱼] 🌸┆兰芷┆APP",
+   "api": "csp_AppUn",
+   "type": 3,
+   "ext": "http:///AZd2zeWnJd10mMjpA2gpKlWDq7ggxf6XDxDuTaoinynvJ3eEi1bZPxC2qgkkAiACxISnMdRC37ODaT/tTEd9foyUox+SNWIsGzujicg5VFm7",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_疏影",
+   "name": "[摸鱼] 🌺┆疏影┆APP",
+   "api": "csp_AppUn",
+   "type": 3,
+   "ext": "http:///AcWh+ygRkvJAOf11TNsY/RqlWx9GJlpo3j4tzpUl+u3fVki/utnqUPm2SGUaMOiuwO9ab8dc4NOr/Kone+3t4Pvvqo19sUMAcLVWyXq8gKIr",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_枕霜",
+   "name": "[摸鱼] ❄️┆枕霜┆APP",
+   "api": "csp_AppUn",
+   "type": 3,
+   "ext": "Ae6vu7b7i5h70Oy94HyVp82ZDRF6HrMNdCYNTQ442xkG4kY88mkG1x34awtkrrUdk56x2qehUzy3YCLubZhewqD5a5lQeSsfcnYh8z8+qVVL",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_观澜",
+   "name": "[摸鱼] 🎞️┆观澜┆APP",
+   "api": "csp_AppUn",
+   "type": 3,
+   "ext": "http:///AVV1qWzQBjKvN7CKup9rpdodlSeTxhlrSJPwshkidi4LdlbDt81YkaxBlOnImlhpaCXFZ3rlaVHkoA57wMFZIEUb0eGUhm8upw9Vw/Qq5sdr",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_孟葭",
+   "name": "[摸鱼] 🌿┆孟葭┆APP",
+   "api": "csp_AppUn",
+   "type": 3,
+   "ext": "http:///AUGjHXVq+vxRJ+qgE4Hsi3sV94g5u8cFfUgjY4diiOxY3cUhBhbqUlPOKbfo6yzjh2BrmyNZGnV3r5j/VfAvnDP1bmLlrwPQ1H2o6cF9VjrH",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_南枝",
+   "name": "[摸鱼] 🌱┆南枝┆APP",
+   "api": "csp_AppUn",
+   "type": 3,
+   "ext": "http:///AUj9LzI2v0nALIaWIMvrw0mqpqAfYqjLEaEdBg2Kpjpynjba5tcMRsocodhKWXuxaxWXNQhmHVm/5ch0t87+Ck3kUcf8gS3HStDFKx/zWH77",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_沐辞",
+   "name": "[摸鱼] 🍃┆沐辞┆APP",
+   "api": "csp_AppUn",
+   "type": 3,
+   "ext": "http:///AYdXH70UMM8plqsXPmZuN9zEJQV/2vpn2nM5OAeVwvV966SO86n0qc/65IvyNOY7I8FscuN2i4tnXSoa2eVVhCbvIzsK+OAWQcMwpKHy1zZg",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Libvio",
+   "name": "[摸鱼] 📺┆立播┆4K",
+   "type": 3,
+   "api": "csp_Libvio",
+   "searchable": 1,
+   "changeable": 1,
+   "ext": {
+    "site": [
+     "https://libviofabu.com",
+     "https://libvio.app",
+     "https://libfabu.com",
+     "https://libviogroup.github.io"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_KZN",
+   "name": "[摸鱼] 😋┆指南┆4K",
+   "type": 3,
+   "api": "csp_KZN",
+   "searchable": 1,
+   "changeable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_SeedHub",
+   "name": "[摸鱼] 🌱┆Seed┆4K",
+   "type": 3,
+   "api": "csp_SeedHub",
+   "searchable": 1,
+   "ext": {
+    "site": [
+     "https://sidhub.cc",
+     "https://seeduck.cc",
+     "https://hubdog.cc"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_PanWebShare123",
+   "name": "[摸鱼] 😎┆123┆4K",
+   "type": 3,
+   "api": "csp_PanWebShare123",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "changeable": 1,
+   "style": {
+    "type": "list",
+    "ratio": 1.433
+   },
+   "ext": {
+    "site": [
+     "https://123panfx.com",
+     "https://pan1.me"
+    ],
+    "cookie": ""
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_PanWebShareGuangYa",
+   "name": "[摸鱼] 😉┆光鸭┆4K",
+   "type": 3,
+   "api": "csp_PanWebShareGuangYa",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "changeable": 1,
+   "style": {
+    "type": "list",
+    "ratio": 1.433
+   },
+   "ext": {
+    "site": [
+     "https://www.guangya.net"
+    ],
+    "cookie": ""
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Yidong4K",
+   "name": "[摸鱼] 📶┆移动┆4K",
+   "type": 3,
+   "api": "csp_Yidong4K",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0,
+   "changeable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_WoNiu",
+   "name": "[摸鱼] 🐌┆蜗牛┆4K",
+   "type": 3,
+   "api": "csp_WoNiu",
+   "searchable": 1,
+   "changeable": 1,
+   "ext": {
+    "site": "https://wn4k.com/"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Qiwei",
+   "name": "[摸鱼] 🌈┆七味┆4K",
+   "type": 3,
+   "api": "csp_Qiwei",
+   "searchable": 1,
+   "filterable": 0,
+   "ext": {
+    "site": [
+     "https://www.qwnull.com",
+     "https://www.qwmkv.com",
+     "https://www.qwfilm.com",
+     "https://www.qnmp4.com",
+     "https://www.qnnull.com",
+     "https://www.qnhot.com",
+     "https://www.qncool.com"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_gying",
+   "name": "[摸鱼] 👀┆观影┆4K",
+   "type": 3,
+   "api": "csp_Gying",
+   "searchable": 1,
+   "quickSearch": 0,
+   "filterable": 0,
+   "ext": {
+    "cookie": "",
+    "site": [
+     "https://www.教父.com",
+     "https://www.星际穿越.com",
+     "https://www.楚门的世界.com",
+     "https://www.泰坦尼克号.com",
+     "https://www.盗梦空间.com",
+     "https://www.肖申克的救赎.com",
+     "https://www.阿甘正传.com",
+     "https://www.黑客帝国.com"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_FishDuoduo",
+   "name": "[摸鱼] 🍀┆多多┆4K",
+   "type": 3,
+   "api": "csp_FishCloud",
+   "searchable": 1,
+   "ext": {
+    "site": [
+     "https://tv.yydsys.top",
+     "https://tv.yydsys.cc",
+     "https://tv.214521.xyz"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Fishhuajuan",
+   "name": "[摸鱼] 🌸┆花卷┆4K",
+   "type": 3,
+   "api": "csp_FishCloud",
+   "searchable": 1,
+   "ext": {
+    "site": [
+     "https://www.hjzhencai.top",
+     "https://www.huanjuanwp.shop"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_FishHuban",
+   "name": "[摸鱼] 🐅┆虎斑┆4K",
+   "type": 3,
+   "api": "csp_FishCloud",
+   "searchable": 1,
+   "ext": {
+    "site": [
+     "http://xhban.xyz",
+     "http://38.76.197.172:16969"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Fishshayang",
+   "name": "[摸鱼] 🤭┆傻样┆4K",
+   "type": 3,
+   "api": "csp_FishCloud",
+   "searchable": 1,
+   "ext": {
+    "site": [
+     "http://xsayang.fun",
+     "http://38.76.197.172:12521"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Fishgege",
+   "name": "[摸鱼] 💫┆八零┆4K",
+   "type": 3,
+   "api": "csp_FishCloud",
+   "searchable": 1,
+   "ext": {
+    "site": [
+     "https://woog.nxog.eu.org",
+     "https://ogkk.nxog.eu.org",
+     "https://woog.430520.xyz"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_ShuangXing",
+   "name": "[摸鱼] 🌟┆双星┆4K",
+   "type": 3,
+   "api": "csp_ShuangXing",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "style": {
+    "type": "list",
+    "ratio": 1.433
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_DianYingYunJi",
+   "name": "[摸鱼] ☁️┆云集┆4K",
+   "type": 3,
+   "api": "csp_DianYingYunJi",
+   "searchable": 1,
+   "changeable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_VideoX",
+   "name": "[摸鱼] 📺┆小北┆云视",
+   "type": 3,
+   "api": "csp_VideoX",
+   "searchable": 1,
+   "changeable": 1,
+   "filterable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Wwys",
+   "name": "[摸鱼] 🍙┆糯米┆影视",
+   "type": 3,
+   "api": "csp_Wwys",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 1,
+   "ext": "https://vip.wwgz.cn:5200",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_CZ",
+   "name": "[摸鱼] 🏭┆厂长┆影视",
+   "type": 3,
+   "api": "csp_CZ",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0,
+   "ext": {
+    "cookie": "",
+    "username": "",
+    "password": "",
+    "site": [
+     "https://www.4kcz.com",
+     "https://www.cz4k.com",
+     "https://cz01.tv",
+     "https://cz01.vip",
+     "https://www.czzy.site",
+     "https://czzy.top"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_wencai",
+   "name": "[摸鱼] ✏️┆文才┆影视",
+   "type": 3,
+   "api": "csp_WenCai",
+   "searchable": 1,
+   "ext": "https://www.tjrongze.com,https://y2s52n7.com,https://m.hkybqufgh.com,https://m.sizhengxt.com,https://m.9zhoukj.com,https://m.jiabaide.cn",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Guazi",
+   "name": "[摸鱼] 🍉┆瓜子┆影视",
+   "type": 3,
+   "api": "csp_Guazi",
+   "searchable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_TvDy",
+   "name": "[摸鱼] 👼┆天堂┆影视",
+   "type": 3,
+   "api": "csp_TvDy",
+   "searchable": 1,
+   "filterable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_SaoHuo",
+   "name": "[摸鱼] 🌶️┆骚火┆影视",
+   "type": 3,
+   "api": "csp_SaoHuo",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 1,
+   "ext": "https://shdy5.us",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Duboku",
+   "name": "[摸鱼] 🎯┆独播┆影视",
+   "type": 3,
+   "api": "csp_Duboku",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_HonHon",
+   "name": "[摸鱼] 🍅┆红红┆短剧",
+   "type": 3,
+   "api": "csp_HonHon",
+   "searchable": 1,
+   "quickSearch": 1,
+   "genre": "shortdrama",
+   "filterable": 1,
+   "ext": {
+    "host": "https://short.fishcloud.top",
+    "quality": "1080p",
+    "danmu": false
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_DJHub",
+   "name": "[摸鱼] 🎭┆短剧┆聚合",
+   "type": 3,
+   "api": "csp_DJHub",
+   "searchable": 1,
+   "quickSearch": 1,
+   "genre": "shortdrama",
+   "filterable": 1,
+   "changeable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_XingHui",
+   "name": "[摸鱼] ✨┆星绘┆动漫",
+   "type": 3,
+   "api": "csp_XingHui",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 1,
+   "filterable": 1,
+   "ext": "http:///Add8krwC68v61DP+FKD6Jfku9NAYotb5APLK7YesWQ1matF4zi2Prh/3AY6D3ZeBGuxJg4SEuXY9n/vMa+B4fC0=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_FanShu",
+   "name": "[摸鱼] 🍠┆番薯┆动漫",
+   "type": 3,
+   "api": "csp_FanShu",
+   "searchable": 1,
+   "quickSearch": 0,
+   "filterable": 1,
+   "ext": "http:///AfcrWiL6kOmzXnbqzxhVVO34r1aA/e0g4grwfsFA8V5EPAVy9WtRO4yVFf3aC5LmzKENIEFO9aA2BMklc+wOUy4=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_双星",
+   "name": "[摸鱼] ✨┆双星┆动漫",
+   "type": 3,
+   "api": "csp_App88",
+   "ext": "http:///ASknzit/3RrKEEXbbz2uOW7k75U9vVpwIABB/21in43V9EurdnfBnTItL6PlxmtMtD6kcaVBntdV/G/gFIItRXiANEcEPDY7/qVV0hfIygxO",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_XgAnime",
+   "name": "[摸鱼] 🍉┆西瓜┆动漫",
+   "type": 3,
+   "api": "csp_XgAnime",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Manbo",
+   "name": "[摸鱼] 🕺┆曼波┆动漫",
+   "type": 3,
+   "api": "csp_AppGet",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "http:///AUzH3yIWvgQkyhQw17uONTsfuN8PupZ/LJdr5C31Y/CWlzSNmarYI5kaJYN5c0p6+Oq0tXuTutQo9MHHytxulL5kmapDuAK5+2NTlpsUgBnr0tOamm69Fwb+jFDQ7VW46qf5EFY+Ea3PHzkpfeObKPM=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Gugu",
+   "name": "[摸鱼] 🐤┆咕咕┆动漫",
+   "type": 3,
+   "api": "csp_AppGet",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "http:///ARKK6LQnl4dB2QciLugEzZ8QD2WdbeK23tPAre1QOEbbL5BfB8cV39JNfSd2+Xhcqr/z+V5To0krLYHUX7NtRtwYBC44/9ayncZMomdbv4ZCBNOUsBEedUQx7SWf1J0pE0BsLG9QlR8tURwRwx/sqT0=",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Jianpian",
+   "name": "[摸鱼] 🧲┆荐片┆磁力",
+   "type": 3,
+   "api": "csp_Jianpian",
+   "searchable": 1,
+   "filterable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Xb6v",
+   "name": "[摸鱼] 🔋┆6V┆磁力",
+   "type": 3,
+   "api": "csp_Xb6v",
+   "searchable": 1,
+   "filterable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_JSo",
+   "name": "[摸鱼] 🐾┆珈珈┆搜索",
+   "type": 3,
+   "api": "csp_JSo",
+   "searchable": 1,
+   "ext": {
+    "site": [
+     "https://j-so.com"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Tiu6",
+   "name": "[摸鱼] 🍭┆Tiu6┆搜索",
+   "type": 3,
+   "api": "csp_Tiu6",
+   "searchable": 1,
+   "filterable": 1,
+   "ext": {
+    "site": [
+     "https://www.tiu6.cn"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Buguyy",
+   "name": "[摸鱼] 🐦┆布谷┆音乐",
+   "type": 3,
+   "api": "csp_Buguyy",
+   "searchable": 1,
+   "filterable": 1,
+   "changeable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_ChuXin",
+   "name": "[摸鱼] 💕┆初心┆音乐",
+   "type": 3,
+   "api": "csp_ChuXin",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_aiting",
+   "name": "[摸鱼] 🎧┆爱听┆音乐",
+   "type": 3,
+   "api": "csp_AiTingMusic",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Music24bit",
+   "name": "[摸鱼] 🎼┆无损┆音乐",
+   "type": 3,
+   "api": "csp_Music24bit",
+   "searchable": 1,
+   "changeable": 1,
+   "ext": {
+    "categories": [
+     "周杰伦",
+     "林俊杰",
+     "陈奕迅",
+     "邓紫棋",
+     "薛之谦"
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_TuXiaoBei",
+   "name": "[摸鱼] 🐰┆小兔┆少儿",
+   "type": 3,
+   "api": "csp_TuXiaoBei",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_BeiLeHu",
+   "name": "[摸鱼] 🐯┆小虎┆少儿",
+   "type": 3,
+   "api": "csp_BeiLeHu",
+   "searchable": 0,
+   "quickSearch": 0,
+   "filterable": 0,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_少儿教育",
+   "name": "[摸鱼] 🧒┆少儿┆教育",
+   "type": 3,
+   "api": "csp_Bili",
+   "style": {
+    "type": "rect",
+    "ratio": 1.597
+   },
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "ext": {
+    "json": "https://nos.netease.com/ysf/89370c8ddf36b5e1beb4d71adb921bda.txt"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_小学课堂",
+   "name": "[摸鱼] 📚┆小学┆课堂",
+   "type": 3,
+   "api": "csp_Bili",
+   "style": {
+    "type": "rect",
+    "ratio": 1.597
+   },
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "ext": {
+    "json": "https://nos.netease.com/ysf/d7a21cf34ede56f5c686ecfba5fc7e3f.txt"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_初中课堂",
+   "name": "[摸鱼] 📐┆初中┆课堂",
+   "type": 3,
+   "api": "csp_Bili",
+   "style": {
+    "type": "rect",
+    "ratio": 1.597
+   },
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "ext": {
+    "json": "https://nos.netease.com/ysf/8f55d520f8d70056695740ef151744a7.txt"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_高中教育",
+   "name": "[摸鱼] 🎓┆高中┆课堂",
+   "type": 3,
+   "api": "csp_Bili",
+   "style": {
+    "type": "rect",
+    "ratio": 1.597
+   },
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "ext": {
+    "json": "https://nos.netease.com/ysf/c66a4b5356141c49fd45ec51568017b4.txt"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_BiliHeji",
+   "name": "[摸鱼] 🎉┆笔璃┆合集",
+   "type": 3,
+   "api": "csp_Bili",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "ext": {
+    "json": "https://nos.netease.com/ysf/0075389dca9afadd4614e9713765ff17.txt"
+   },
+   "style": {
+    "type": "rect",
+    "ratio": 1.433
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "name": "[摸鱼] 🎉┆笔璃┆歌曲",
+   "key": "摸鱼_BiliGequ",
+   "type": 3,
+   "api": "csp_Bili",
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "ext": {
+    "json": "https://nos.netease.com/ysf/6496356286589c68f52c2f99c0c674c7.txt"
+   },
+   "style": {
+    "type": "rect",
+    "ratio": 1.433
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Kanqiu",
+   "name": "[摸鱼] ⚽┆看球┆体育",
+   "type": 3,
+   "api": "csp_Kanqiu",
+   "searchable": 0,
+   "filterable": 1,
+   "indexs": 0,
+   "ext": "http://www.88kanqiu.one",
+   "style": {
+    "type": "list"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Sir88",
+   "name": "[摸鱼] 🏟️┆超全┆体育",
+   "type": 3,
+   "api": "csp_Sir88",
+   "searchable": 0,
+   "filterable": 1,
+   "indexs": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_QiutongTY",
+   "name": "[摸鱼] 🏀┆球通┆体育",
+   "type": 3,
+   "api": "csp_QiutongTY",
+   "searchable": 0,
+   "filterable": 0,
+   "changeable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_GuaziTY",
+   "name": "[摸鱼] 🥜┆瓜子┆体育",
+   "type": 3,
+   "api": "csp_GuaziTY",
+   "searchable": 0,
+   "filterable": 0,
+   "changeable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_919TY",
+   "name": "[摸鱼] 🏅┆919┆体育",
+   "type": 3,
+   "api": "csp_C919TY",
+   "searchable": 0,
+   "filterable": 0,
+   "changeable": 1,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_TingBook",
+   "name": "[摸鱼] 📻┆六月┆有声",
+   "type": 3,
+   "api": "csp_TingBook",
+   "searchable": 1,
+   "indexs": 0,
+   "ext": "https://app.365ting.com",
+   "style": {
+    "type": "list"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_TingBookJinXia",
+   "name": "[摸鱼] 🎙️┆堇夏┆有声",
+   "type": 3,
+   "api": "csp_TingBookJinXia",
+   "searchable": 1,
+   "filterable": 1,
+   "indexs": 0,
+   "ext": "https://m.ting15.com",
+   "style": {
+    "type": "list"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_TingShijie",
+   "name": "[摸鱼] 🌍┆听界┆有声",
+   "type": 3,
+   "api": "csp_TingShijie",
+   "searchable": 1,
+   "indexs": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_TingYou",
+   "name": "[摸鱼] 🎧┆听友┆有声",
+   "type": 3,
+   "api": "csp_TingYou",
+   "searchable": 1,
+   "indexs": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Market",
+   "name": "[摸鱼] 🛒┆网盘┆市场",
+   "type": 3,
+   "api": "csp_Market",
+   "searchable": 0,
+   "indexs": 0,
+   "style": {
+    "type": "list"
+   },
+   "ext": {
+    "categories": [
+     {
+      "name": "潇洒资源一",
+      "url": "https://pan.quark.cn/s/969cc97687d3"
+     },
+     {
+      "name": "潇洒资源二",
+      "url": "https://drive.uc.cn/s/ba531661b3eb4"
+     },
+     {
+      "name": "奇奇更新一",
+      "url": "https://pan.quark.cn/s/ab00f85da8ea"
+     },
+     {
+      "name": "奇奇更新二",
+      "url": "https://drive.uc.cn/s/ef22fcbfdd934"
+     }
+    ]
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_push_agent",
+   "name": "[摸鱼] 💌┆推送┆接收",
+   "type": 3,
+   "api": "csp_Push",
+   "searchable": 0,
+   "changeable": 0,
+   "indexs": 0,
+   "timeout": 60,
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Fishdrive",
+   "name": "[摸鱼] 🐠┆摸鱼┆媒体库",
+   "type": 3,
+   "api": "csp_FishDrive",
+   "indexs": 0,
+   "searchable": 1,
+   "filterable": 1,
+   "ext": "https://tc-new.z.wiki/autoupload/iYHTWVx6T8RrCmqdGD6MOdiO_OyvX7mIgxFBfDMDErs/20260715/bf45/fishdrive.json",
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "摸鱼_Wallpaper",
+   "name": "[摸鱼] 🖼️┆摸鱼┆壁纸库",
+   "type": 3,
+   "api": "csp_Wallpaper",
+   "searchable": 0,
+   "indexs": 0,
+   "quickSearch": 0,
+   "filterable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 0.56
+   },
+   "jar": "https://qiniu.gongxueyun.com/upload/6893388/2026-10-23/report/762889058_2_1792796519503.jar;md5;19b2f65c16f492ca8a9c3abadebe8129"
+  },
+  {
+   "key": "AIWEX_Douban",
+   "name": "[AIWEX] 🐮【免费分享】🐮",
+   "type": 3,
+   "api": "csp_NewDouBanGuard",
+   "indexs": 1,
+   "searchable": 0,
+   "quickSearch": 0,
+   "filterable": 0,
+   "ext": "https://cdn.waimaimingtang.com/file/images/bwc/20260414181247-ae51abfbfe.txt",
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_Doubanaaaa",
+   "name": "[AIWEX] 🐮【更新日期:20261026】🐮",
+   "type": 3,
+   "api": "csp_NewDouBanGuard",
+   "indexs": 1,
+   "searchable": 0,
+   "quickSearch": 0,
+   "filterable": 0,
+   "ext": "https://cdn.waimaimingtang.com/file/images/bwc/20260414181247-ae51abfbfe.txt",
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_Wexconfig",
+   "name": "[AIWEX] 🐮配置┃中心🐮",
+   "type": 3,
+   "api": "csp_PanConfigGuard",
+   "searchable": 0,
+   "changeable": 0,
+   "indexs": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_MyPan",
+   "name": "[AIWEX] 🐮我的┃网盘🐮",
+   "type": 3,
+   "api": "csp_MyPanGuard",
+   "searchable": 0,
+   "changeable": 0,
+   "indexs": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_花卷",
+   "name": "[AIWEX] 💓花卷┃4K💓‍",
+   "type": 3,
+   "api": "csp_AiNewHuaJuanGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_玩偶",
+   "name": "[AIWEX] 💓‍玩偶┃4K💓‍",
+   "type": 3,
+   "api": "csp_AiNewWoggGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewGuanYing",
+   "name": "[AIWEX] 💓‍观影┃4K💓‍",
+   "type": 3,
+   "api": "csp_AiNewGuanYingGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiQwMkv",
+   "name": "[AIWEX] 💓‍七味┃4K💓‍",
+   "type": 3,
+   "api": "csp_AiQwMkvGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewPianKu",
+   "name": "[AIWEX] 💓盘库┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewPianKuGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewHuBan",
+   "name": "[AIWEX] 💓虎斑┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewHuBanGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewMuOu",
+   "name": "[AIWEX] 💓木偶┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewMuOuGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewDuoDuo",
+   "name": "[AIWEX] 💓多多┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewDuoDuoGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewKuaiYing",
+   "name": "[AIWEX] 💓快影┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewKuaiYingGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewLaBi",
+   "name": "[AIWEX] 💓蜡笔┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewLaBiGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewShanDian",
+   "name": "[AIWEX] 💓闪电┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewShanDianGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewJuTou",
+   "name": "[AIWEX] 💓剧透┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewJuTouGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewLibvio",
+   "name": "[AIWEX] 💓立播┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewLibvioGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_原盘",
+   "name": "[AIWEX] 💓‍原盘┃4K💓‍",
+   "type": 3,
+   "api": "csp_AiNewZhiNan4KGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_蜗牛",
+   "name": "[AIWEX] 💓‍蜗牛┃4K💓‍",
+   "type": 3,
+   "api": "csp_AiNewWoNiu4KGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiPan1Me",
+   "name": "[AIWEX] 💓盘迷┃4K💓",
+   "type": 3,
+   "api": "csp_AiPan1MeGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AiNewYiDong4K",
+   "name": "[AIWEX] 💓逸动┃4K💓",
+   "type": 3,
+   "api": "csp_AiNewYiDong4KGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexHanXiaoQuan",
+   "name": "[AIWEX] 💥韩剧┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAiHanXiaoQuanGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexAiGuaZi",
+   "name": "[AIWEX] 💥瓜子┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAiGuaZiGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexAiDuBoKu",
+   "name": "[AIWEX] 💥独播┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAiDuBoKuGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexAiYueYue",
+   "name": "[AIWEX] 💥闪电┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAiYueYueGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexAiWenCai",
+   "name": "[AIWEX] 💥文才┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAiWenCaiGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexFengYe4K",
+   "name": "[AIWEX] 💥小枫┃秒播💥",
+   "type": 3,
+   "api": "csp_WexFengYe4KGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_賤賤",
+   "name": "[AIWEX] 💥贱片┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAiJianPianGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 大师兄",
+   "name": "[AIWEX] 💥师兄┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Dsx",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 粉猪追剧",
+   "name": "[AIWEX] 💥粉猪┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Fz",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 咸鱼",
+   "name": "[AIWEX] 💥咸鱼┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Xy",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 追剧达人",
+   "name": "[AIWEX] 💥追剧┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Zjdr",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 小柚子",
+   "name": "[AIWEX] 💥柚子┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Xyz",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 小柠檬",
+   "name": "[AIWEX] 💥柠檬┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Xnm",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 蒙太奇",
+   "name": "[AIWEX] 💥太奇┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Mtq",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 零零七影视",
+   "name": "[AIWEX] 💥零七┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Llq",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 小柿子",
+   "name": "[AIWEX] 💥柿子┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Xsz",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AppV7 | 小黄人",
+   "name": "[AIWEX] 💥黄人┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAppV7Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "ext": {
+    "config": "AppV7Xhr",
+    "proxyImg": false
+   },
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexAiYiYs",
+   "name": "[AIWEX] 💥伊影┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAiYiYsGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexAiReBo",
+   "name": "[AIWEX] 💥热播┃秒播💥",
+   "type": 3,
+   "api": "csp_WexAiReBoGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexAiBoBo",
+   "name": "[AIWEX] 🎇伯伯┃秒播🎇",
+   "type": 3,
+   "api": "csp_WexAiBoBoGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_WexAiIkanBot",
+   "name": "[AIWEX] 🎇爱看┃采集🎇",
+   "type": 3,
+   "api": "csp_WexAiIkanBotGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_LiveAiHuYa",
+   "name": "[AIWEX] 🐯‍虎牙┃直播🐯‍",
+   "type": 3,
+   "api": "csp_LiveAiHuYaGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_LiveAiDouYu",
+   "name": "[AIWEX] 🐳斗鱼┃直播🐳",
+   "type": 3,
+   "api": "csp_LiveAiDouYuGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_LiveAiBiLi",
+   "name": "[AIWEX] 🅱️哔哩┃直播🅱️",
+   "type": 3,
+   "api": "csp_LiveAiBiLiGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_ManJuAiHongGuo",
+   "name": "[AIWEX] 🍉漫短┃小红🍉",
+   "type": 3,
+   "类型": "短剧",
+   "api": "csp_ManJuAiHongGuoGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_ManJuAiHuoLong",
+   "name": "[AIWEX] 🍉漫剧┃小龙🍉",
+   "type": 3,
+   "类型": "短剧",
+   "api": "csp_ManJuAiHuoLongGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_ManJuAiQiMao",
+   "name": "[AIWEX] 🍉漫剧┃小猫🍉",
+   "type": 3,
+   "类型": "短剧",
+   "api": "csp_ManJuAiQiMaoGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_ManJuAiXiFan",
+   "name": "[AIWEX] 🍉漫短┃小喜🍉",
+   "type": 3,
+   "类型": "短剧",
+   "api": "csp_ManJuAiXiFanGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_ManJuAiHeMa",
+   "name": "[AIWEX] 🍉漫短┃小马🍉",
+   "type": 3,
+   "类型": "短剧",
+   "api": "csp_ManJuAiHeMaGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_DuanJuAiHaoKan",
+   "name": "[AIWEX] 🍉短剧┃好看🍉",
+   "type": 3,
+   "类型": "短剧",
+   "api": "csp_DuanJuAiHaoKanGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_DuanJuAiQiMiao",
+   "name": "[AIWEX] 🍉短剧┃小猫🍉",
+   "type": 3,
+   "类型": "短剧",
+   "api": "csp_DuanJuAiQiMiaoGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_DuanJuAiXingYa",
+   "name": "[AIWEX] 🍉短剧┃星星🍉",
+   "type": 3,
+   "类型": "短剧",
+   "api": "csp_DuanJuAiXingYaGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_DuanJuAiWeiGuan",
+   "name": "[AIWEX] 🍉短剧┃小薇🍉",
+   "type": 3,
+   "类型": "短剧",
+   "api": "csp_DuanJuAiWeiGuanGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AnimeXiFan",
+   "name": "[AIWEX] 🤡稀饭┃动漫🤡",
+   "type": 3,
+   "api": "csp_AnimeXiFanGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AnimeCiYuanCheng",
+   "name": "[AIWEX] 🤡次元┃动漫🤡",
+   "type": 3,
+   "api": "csp_AnimeCiYuanChengGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AnimeAiMoDu",
+   "name": "[AIWEX] 🤡魔都┃动漫🤡",
+   "type": 3,
+   "api": "csp_AnimeAiMoDuGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_BookHongGuo",
+   "name": "[AIWEX] 🎃‍小红┃听书🎃",
+   "type": 3,
+   "api": "csp_BookHongGuoGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_BookHeMa",
+   "name": "[AIWEX] 🎃‍小马┃听书🎃",
+   "type": 3,
+   "api": "csp_BookHeMaGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_BookAiShiJie",
+   "name": "[AIWEX] 🎃‍极品┃听书🎃",
+   "type": 3,
+   "api": "csp_BookAiShiJieGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_BookAiYueTing",
+   "name": "[AIWEX] 🎃‍悦庭┃听书🎃",
+   "type": 3,
+   "api": "csp_BookAiYueTingGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "timeout": 120,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_BookAi23TingShu",
+   "name": "[AIWEX] 🎃‍爱上┃听书🎃",
+   "type": 3,
+   "api": "csp_BookAi23TingShuGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_ChildrenAiBaoBao",
+   "name": "[AIWEX] 👼宝宝┃儿歌👼",
+   "type": 3,
+   "api": "csp_ChildrenAiBaoBaoGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 2
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_ChildrenAiBeiWa",
+   "name": "[AIWEX] 👼贝贝┃儿歌👼",
+   "type": 3,
+   "api": "csp_ChildrenAiBeiWaGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 2
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_ChildrenAiTuTu",
+   "name": "[AIWEX] 👼兔兔┃儿歌👼",
+   "type": 3,
+   "api": "csp_ChildrenAiTuTuGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 2
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_MusicAiTangDou",
+   "name": "[AIWEX] 💃跳舞┃教学💃",
+   "type": 3,
+   "api": "csp_MusicAiTangDouGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 2
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_MusicAiLiYuan",
+   "name": "[AIWEX] 🎎戏曲┃秒播🎎",
+   "type": 3,
+   "api": "csp_MusicAiLiYuanGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 2
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_MusicAiQingTing",
+   "name": "[AIWEX] 🎼蜻蜓┃电台🎼",
+   "type": 3,
+   "api": "csp_MusicAiQingTingGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_MusicAiIKtv",
+   "name": "[AIWEX] 🎼KTV┃音乐🎼",
+   "type": 3,
+   "api": "csp_MusicAiIKtvGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_MusicAiKuWoa",
+   "name": "[AIWEX] 🎼小酷┃音乐🎼",
+   "type": 3,
+   "api": "csp_MusicAiKuWoaGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_MusicAi163",
+   "name": "[AIWEX] 🎼易听┃音乐🎼",
+   "type": 3,
+   "api": "csp_MusicAi163Guard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_MusicAiKuWo",
+   "name": "[AIWEX] 🎼酷听┃音乐🎼",
+   "type": 3,
+   "api": "csp_MusicAiKuWoGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_MusicAiLunHui",
+   "name": "[AIWEX] 🎼轮回┃舞曲🎼",
+   "type": 3,
+   "api": "csp_MusicAiLunHuiGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SportAiFeiQiu",
+   "name": "[AIWEX] 🌐飞球┃体育🌐",
+   "type": 3,
+   "api": "csp_SportAiFeiQiuGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SportAiGuaZi",
+   "name": "[AIWEX] 🌐瓜子┃体育🌐",
+   "type": 3,
+   "api": "csp_SportAiGuaZiGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SportAiKanQiuTong",
+   "name": "[AIWEX] 🌐球通┃体育🌐",
+   "type": 3,
+   "api": "csp_SportAiKanQiuTongGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SportAiKanqiu",
+   "name": "[AIWEX] 🌐八八┃体育🌐",
+   "type": 3,
+   "api": "csp_SportAiKanqiuGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SportAiKaFei",
+   "name": "[AIWEX] 🌐咖啡┃体育🌐",
+   "type": 3,
+   "api": "csp_SportAiKaFeiGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SportAiWwe",
+   "name": "[AIWEX] 🌐WWE┃体育🌐",
+   "type": 3,
+   "api": "csp_SportAiWweGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_FakeAi115Share",
+   "name": "[AIWEX] 💓115┃分享💓‍",
+   "type": 3,
+   "api": "csp_FakeAi115ShareGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "timeout": 50,
+   "style": {
+    "type": "list"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_Emby",
+   "name": "[AIWEX] 💓Emby┃4K💓",
+   "type": 3,
+   "api": "csp_EmbyGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_Emby001",
+   "name": "[AIWEX] 💓Emby001┃4K💓",
+   "type": 3,
+   "api": "csp_EmbyDiyGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "ext": {
+    "embynumber": 0
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_AList",
+   "name": "[AIWEX] 👁️Alist┃DIY👁️",
+   "type": 3,
+   "api": "csp_AListGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_webdav",
+   "name": "[AIWEX] 👁️WebDav┃DIY👁️",
+   "type": 3,
+   "api": "csp_WebDAVGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_DiyVod",
+   "name": "[AIWEX] 👁Vod┃DIY👁️",
+   "type": 3,
+   "api": "csp_DiyVodGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "list"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_biliys",
+   "name": "[AIWEX] 🅱哔哩┃影视🅱",
+   "type": 3,
+   "api": "csp_BiliYsGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_bilibili",
+   "name": "[AIWEX]  🅱‍哔哩┃合集🅱‍",
+   "type": 3,
+   "api": "csp_BiliGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 1.433
+   },
+   "ext": {
+    "json": "https://support-chat.rongcloud.cn/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBYkE9IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--47a8ff0e68559a89a9a75b37d09a2b0854dc5a8a/bili001.txt"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_bilixiqu",
+   "name": "[AIWEX]  🅱‍哔哩┃戏曲🅱‍",
+   "type": 3,
+   "api": "csp_BiliGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 1.433
+   },
+   "ext": {
+    "json": "https://storage.7x24cc.com/storage-server/presigned/ss1/a6-online-fileupload/newMediaImage/183E562_773_xiqu_20251130182006749newMediaImage.txt"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_biliych",
+   "name": "[AIWEX]  🅱‍哔哩┃歌曲🅱‍",
+   "type": 3,
+   "api": "csp_BiliGuard",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "changeable": 0,
+   "style": {
+    "type": "rect",
+    "ratio": 1.433
+   },
+   "ext": {
+    "json": "https://support-chat.rongcloud.cn/rails/active_storage/blobs/redirect/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBBYkU9IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--3083f43a14e6b59f4bfe248478a3a8765b34bfdd/bilisong.txt"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_少儿教育",
+   "name": "[AIWEX] 📚少儿┃教育📚",
+   "type": 3,
+   "api": "csp_BiliGuard",
+   "style": {
+    "type": "rect",
+    "ratio": 1.597
+   },
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "ext": {
+    "json": "https://storage.7x24cc.com/storage-server/presigned/ss1/a6-online-fileupload/newMediaImage/3C3AB7A_773_ertong_20250828171550247newMediaImage.txt"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_小学课堂",
+   "name": "[AIWEX] 📚小学┃课堂📚",
+   "type": 3,
+   "api": "csp_BiliGuard",
+   "style": {
+    "type": "rect",
+    "ratio": 1.597
+   },
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "ext": {
+    "json": "https://storage.7x24cc.com/storage-server/presigned/ss1/a6-online-fileupload/newMediaImage/4A3AA71_773_xiaoxue_20250828171535645newMediaImage.txt"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_初中课堂",
+   "name": "[AIWEX] 📚初中┃课堂📚",
+   "type": 3,
+   "api": "csp_BiliGuard",
+   "style": {
+    "type": "rect",
+    "ratio": 1.597
+   },
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "ext": {
+    "json": "https://storage.7x24cc.com/storage-server/presigned/ss1/a6-online-fileupload/newMediaImage/19B1839_773_chuzhong_20250828171521929newMediaImage.txt"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_高中教育",
+   "name": "[AIWEX] 📚高中┃课堂📚",
+   "type": 3,
+   "api": "csp_BiliGuard",
+   "style": {
+    "type": "rect",
+    "ratio": 1.597
+   },
+   "searchable": 0,
+   "quickSearch": 0,
+   "changeable": 0,
+   "ext": {
+    "json": "https://storage.7x24cc.com/storage-server/presigned/ss1/a6-online-fileupload/newMediaImage/345A587_773_gaozhong_20250828171449997newMediaImage.txt"
+   },
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SoAiHaiYin",
+   "name": "[AIWEX] 🎠盘搜┃综合🎠",
+   "type": 3,
+   "api": "csp_SoAiHaiYinGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SoAiPanSoo",
+   "name": "[AIWEX] 🎠九七┃综合🎠",
+   "type": 3,
+   "api": "csp_SoAiPanSooGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SoAiQuPanShe",
+   "name": "[AIWEX] 🎠趣搜┃百度🎠",
+   "type": 3,
+   "api": "csp_SoAiQuPanSheGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SoAiAiPanSo",
+   "name": "[AIWEX] 🎠爱盘┃综合🎠",
+   "type": 3,
+   "api": "csp_SoAiAiPanSoGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_SoKaKa",
+   "name": "[AIWEX] 🎠卡卡┃综合🎠",
+   "type": 3,
+   "api": "csp_SoKaKaGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
+  },
+  {
+   "key": "AIWEX_push_agent",
+   "name": "[AIWEX] 推送",
+   "type": 3,
+   "api": "csp_PushGuard",
+   "searchable": 1,
+   "changeable": 0,
+   "jar": "http://oss4liview.moji.com/thd_file/2026/10/26/837a77b77fc98aba6b97856944e94d7c.jpg;md5;722d5c1bdcb1b38fc62874941e060d6b"
   }
  ],
  "rules": [
@@ -704,6 +3035,18 @@
    "playerType": 2,
    "timeout": 10,
    "ua": "okHttp/Mod-1.5.0.0"
+  },
+  {
+   "name": "[摸鱼] superiptv",
+   "type": 0,
+   "url": "http://127.0.0.1:5266/iptv.m3u",
+   "playerType": 2
+  },
+  {
+   "name": "[AIWEX] Kimentanm",
+   "type": 0,
+   "url": "https://down.nigx.cn/raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u",
+   "playerType": 2
   }
  ]
 }

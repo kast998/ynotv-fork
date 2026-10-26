@@ -20,7 +20,7 @@ YOUTUBE = {
     "key": "ynotv_youtube",
     "name": "▶ YouTube",
     "type": 3,
-    "api": RAW + "youtube.js?v=2",
+    "api": "./youtube.js?v=3",
     "searchable": 1,
     "quickSearch": 1,
     "changeable": 0,

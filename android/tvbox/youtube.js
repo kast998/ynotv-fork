@@ -234,8 +234,8 @@ function createSpider(site = {}) {
             vod.vod_remarks = d;
             vod.vod_content = "线路诊断：" + d + (vod.vod_content ? "\n\n" + vod.vod_content : "");
         } catch (e) { }
-        vod.vod_play_from = "YouTube$$$备用线路";
-        vod.vod_play_url = "播放$" + url + "$$$播放$direct:" + url;
+        vod.vod_play_from = "直连线路$$$YouTube";
+        vod.vod_play_url = "播放$direct:" + url + "$$$播放$" + url;
         return {list: [vod]};
     }
 
@@ -271,7 +271,7 @@ function createSpider(site = {}) {
         const h = {"Content-Type": "application/json", "User-Agent": c.ua, "X-YouTube-Client-Name": c.id, "X-YouTube-Client-Version": c.version};
         if (vd) h["X-Goog-Visitor-Id"] = vd;
         const body = {videoId: vid, contentCheckOk: true, racyCheckOk: true, context: {client}};
-        return await net.json(YT + "/youtubei/v1/player?prettyPrint=false", {method: "POST", postType: "json", data: body, timeout: 15000, headers: h});
+        return await net.json(YT + "/youtubei/v1/player?prettyPrint=false", {method: "POST", postType: "json", data: body, timeout: 8000, headers: h});
     }
 
     async function diagnose(url) {
@@ -291,16 +291,26 @@ function createSpider(site = {}) {
         return (visitor ? "[vd] " : "") + out.join(" | ");
     }
 
+    const played = {};
     async function direct(url) {
         const vid = videoId(url);
-        for (const c of CLIENTS) {
-            try {
-                const o = await callPlayer(c, vid);
-                const sd = (o && o.streamingData) || {};
-                if (sd.hlsManifestUrl) return {parse: 0, url: sd.hlsManifestUrl, header: {"User-Agent": c.ua}};
-                const muxed = (sd.formats || []).filter((f) => f.url).sort((a, b) => (b.height || 0) - (a.height || 0));
-                if (muxed.length) return {parse: 0, url: muxed[0].url, header: {"User-Agent": c.ua}};
-            } catch (e) { }
+        const hit = played[vid];
+        if (hit && Date.now() - hit.t < 3 * 3600 * 1000) return hit.r;
+        for (let round = 0; round < 4; round++) {
+            if (round > 0) visitor = "";
+            for (const c of CLIENTS) {
+                try {
+                    const o = await callPlayer(c, vid);
+                    const sd = (o && o.streamingData) || {};
+                    let r = null;
+                    if (sd.hlsManifestUrl) r = {parse: 0, url: sd.hlsManifestUrl, header: {"User-Agent": c.ua}};
+                    else {
+                        const muxed = (sd.formats || []).filter((f) => f.url).sort((a, b) => (b.height || 0) - (a.height || 0));
+                        if (muxed.length) r = {parse: 0, url: muxed[0].url, header: {"User-Agent": c.ua}};
+                    }
+                    if (r) { played[vid] = {t: Date.now(), r}; return r; }
+                } catch (e) { }
+            }
         }
         return null;
     }

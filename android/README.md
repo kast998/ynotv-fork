@@ -1,6 +1,9 @@
 # ynoTV Android
 
-FongMi/TV (GPL-3.0) mobile build with a built-in YouTube site (NewPipeExtractor):
-TVBox sources (e.g. 饭太硬), IPTV live, and YouTube in one app.
+Use the official FongMi/TV mobile APK (https://github.com/FongMi/Release) with this config:
 
-The build workflow checks out FongMi/TV at a pinned commit, copies `overlay/`, runs `patch.py`, and builds the mobile APK.
+    https://raw.githubusercontent.com/kast998/ynotv-fork/main/android/tvbox/ynotv.json
+
+It is 饭太硬's TVBox config with a ▶ YouTube site added on top (`tvbox/youtube.js`,
+QuickJS). `tvbox-config.yml` refreshes it every 6 hours. `youtube.json` is a
+YouTube-only config.

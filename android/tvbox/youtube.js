@@ -253,11 +253,25 @@ function createSpider(site = {}) {
         return m ? m[1] : "";
     }
 
+    let visitor = "";
+    async function visitorData() {
+        if (visitor) return visitor;
+        try {
+            const o = await net.json(YT + "/youtubei/v1/visitor_id?prettyPrint=false", {method: "POST", postType: "json", timeout: 10000,
+                data: {context: context()}, headers: headers()});
+            visitor = (o && o.responseContext && o.responseContext.visitorData) || "";
+        } catch (e) { }
+        return visitor;
+    }
+
     async function callPlayer(c, vid) {
-        const body = {videoId: vid, contentCheckOk: true, racyCheckOk: true,
-            context: {client: Object.assign({clientName: c.name, clientVersion: c.version, hl, gl}, c.extra)}};
-        return await net.json(YT + "/youtubei/v1/player?prettyPrint=false", {method: "POST", postType: "json", data: body, timeout: 15000,
-            headers: {"Content-Type": "application/json", "User-Agent": c.ua, "X-YouTube-Client-Name": c.id, "X-YouTube-Client-Version": c.version}});
+        const vd = await visitorData();
+        const client = Object.assign({clientName: c.name, clientVersion: c.version, hl, gl}, c.extra);
+        if (vd) client.visitorData = vd;
+        const h = {"Content-Type": "application/json", "User-Agent": c.ua, "X-YouTube-Client-Name": c.id, "X-YouTube-Client-Version": c.version};
+        if (vd) h["X-Goog-Visitor-Id"] = vd;
+        const body = {videoId: vid, contentCheckOk: true, racyCheckOk: true, context: {client}};
+        return await net.json(YT + "/youtubei/v1/player?prettyPrint=false", {method: "POST", postType: "json", data: body, timeout: 15000, headers: h});
     }
 
     async function diagnose(url) {
@@ -274,17 +288,14 @@ function createSpider(site = {}) {
                 out.push(c.name + ":出错 " + String(e && e.message || e).slice(0, 60));
             }
         }
-        return out.join(" | ");
+        return (visitor ? "[vd] " : "") + out.join(" | ");
     }
 
     async function direct(url) {
         const vid = videoId(url);
         for (const c of CLIENTS) {
             try {
-                const body = {videoId: vid, contentCheckOk: true, racyCheckOk: true,
-                    context: {client: Object.assign({clientName: c.name, clientVersion: c.version, hl, gl}, c.extra)}};
-                const o = await net.json(YT + "/youtubei/v1/player?prettyPrint=false", {method: "POST", postType: "json", data: body, timeout: 15000,
-                    headers: {"Content-Type": "application/json", "User-Agent": c.ua, "X-YouTube-Client-Name": c.id, "X-YouTube-Client-Version": c.version}});
+                const o = await callPlayer(c, vid);
                 const sd = (o && o.streamingData) || {};
                 if (sd.hlsManifestUrl) return {parse: 0, url: sd.hlsManifestUrl, header: {"User-Agent": c.ua}};
                 const muxed = (sd.formats || []).filter((f) => f.url).sort((a, b) => (b.height || 0) - (a.height || 0));

@@ -229,6 +229,11 @@ function createSpider(site = {}) {
             } catch (e) { }
         }
         delete vod.style;
+        try {
+            const d = await diagnose(url);
+            vod.vod_remarks = d;
+            vod.vod_content = "线路诊断：" + d + (vod.vod_content ? "\n\n" + vod.vod_content : "");
+        } catch (e) { }
         vod.vod_play_from = "YouTube$$$备用线路";
         vod.vod_play_url = "播放$" + url + "$$$播放$direct:" + url;
         return {list: [vod]};
@@ -246,6 +251,30 @@ function createSpider(site = {}) {
     function videoId(url) {
         const m = String(url).match(/[?&]v=([\w-]{11})/) || String(url).match(/(?:youtu\.be\/|shorts\/|live\/)([\w-]{11})/);
         return m ? m[1] : "";
+    }
+
+    async function callPlayer(c, vid) {
+        const body = {videoId: vid, contentCheckOk: true, racyCheckOk: true,
+            context: {client: Object.assign({clientName: c.name, clientVersion: c.version, hl, gl}, c.extra)}};
+        return await net.json(YT + "/youtubei/v1/player?prettyPrint=false", {method: "POST", postType: "json", data: body, timeout: 15000,
+            headers: {"Content-Type": "application/json", "User-Agent": c.ua, "X-YouTube-Client-Name": c.id, "X-YouTube-Client-Version": c.version}});
+    }
+
+    async function diagnose(url) {
+        const vid = videoId(url);
+        const out = [];
+        for (const c of CLIENTS) {
+            try {
+                const o = await callPlayer(c, vid);
+                const ps = (o && o.playabilityStatus) || {};
+                const sd = (o && o.streamingData) || {};
+                const n = (sd.formats || []).filter((f) => f.url).length;
+                out.push(c.name + ":" + (ps.status || "无响应") + (sd.hlsManifestUrl ? " HLS" : "") + (n ? " 直链" + n : "") + (ps.reason ? " (" + ps.reason + ")" : ""));
+            } catch (e) {
+                out.push(c.name + ":出错 " + String(e && e.message || e).slice(0, 60));
+            }
+        }
+        return out.join(" | ");
     }
 
     async function direct(url) {

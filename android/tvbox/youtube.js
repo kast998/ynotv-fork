@@ -229,13 +229,50 @@ function createSpider(site = {}) {
             } catch (e) { }
         }
         delete vod.style;
-        vod.vod_play_from = "YouTube";
-        vod.vod_play_url = "播放$" + url;
+        vod.vod_play_from = "YouTube$$$备用线路";
+        vod.vod_play_url = "播放$" + url + "$$$播放$direct:" + url;
         return {list: [vod]};
     }
 
-    function play(flag, id, vipFlags) {
-        return {parse: 0, url: String(id)};
+    const CLIENTS = [
+        {name: "IOS", id: "5", version: "20.10.4",
+            ua: "com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)",
+            extra: {deviceMake: "Apple", deviceModel: "iPhone16,2", osName: "iPhone", osVersion: "18.3.2.22D82"}},
+        {name: "ANDROID_VR", id: "28", version: "1.62.27",
+            ua: "com.google.android.apps.youtube.vr.oculus/1.62.27 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip",
+            extra: {deviceMake: "Oculus", deviceModel: "Quest 3", androidSdkVersion: 32, osName: "Android", osVersion: "12L"}},
+    ];
+
+    function videoId(url) {
+        const m = String(url).match(/[?&]v=([\w-]{11})/) || String(url).match(/(?:youtu\.be\/|shorts\/|live\/)([\w-]{11})/);
+        return m ? m[1] : "";
+    }
+
+    async function direct(url) {
+        const vid = videoId(url);
+        for (const c of CLIENTS) {
+            try {
+                const body = {videoId: vid, contentCheckOk: true, racyCheckOk: true,
+                    context: {client: Object.assign({clientName: c.name, clientVersion: c.version, hl, gl}, c.extra)}};
+                const o = await net.json(YT + "/youtubei/v1/player?prettyPrint=false", {method: "POST", postType: "json", data: body, timeout: 15000,
+                    headers: {"Content-Type": "application/json", "User-Agent": c.ua, "X-YouTube-Client-Name": c.id, "X-YouTube-Client-Version": c.version}});
+                const sd = (o && o.streamingData) || {};
+                if (sd.hlsManifestUrl) return {parse: 0, url: sd.hlsManifestUrl, header: {"User-Agent": c.ua}};
+                const muxed = (sd.formats || []).filter((f) => f.url).sort((a, b) => (b.height || 0) - (a.height || 0));
+                if (muxed.length) return {parse: 0, url: muxed[0].url, header: {"User-Agent": c.ua}};
+            } catch (e) { }
+        }
+        return null;
+    }
+
+    async function play(flag, id, vipFlags) {
+        const s = String(id);
+        if (s.startsWith("direct:")) {
+            const url = s.slice(7);
+            const r = await direct(url);
+            return r || {parse: 0, url};
+        }
+        return {parse: 0, url: s};
     }
 
     return {init, home, homeVod, category, detail, search, play, action};

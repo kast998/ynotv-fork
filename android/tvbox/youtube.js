@@ -77,7 +77,7 @@ function createSpider(site = {}) {
     }
 
     async function post(url, body) {
-        return await net.json(url, {method: "POST", postType: "json", data: body, headers: headers(), timeout: 15000});
+        return await net.json(url, {method: "POST", postType: "json", data: body, headers: headers(), timeout: 10000});
     }
 
     function walk(o, vids, conts) {
@@ -188,6 +188,7 @@ function createSpider(site = {}) {
     async function homeVod() {
         let list = [];
         try { list = (await query(loggedIn() ? FEEDS[0][1] : classes[0][1], "1")).list; } catch (e) { }
+        if (!list.length) list = [{vod_id: "action/status", vod_name: "YouTube 连接失败", vod_remarks: "请检查代理是否转发 youtube.com", action: "status", style: {type: "list"}}];
         return {list: loggedIn() ? list : [loginCard()].concat(list)};
     }
 

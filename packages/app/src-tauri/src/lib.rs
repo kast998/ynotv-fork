@@ -1712,14 +1712,178 @@ fn find_file_named(dir: &std::path::Path, name: &str) -> Option<std::path::PathB
     None
 }
 
-async fn youtube_subtitles_local_whisper(
-    app: &tauri::AppHandle,
-    ytdl: &str,
-    url: &str,
-    id: &str,
-    dir: &std::path::Path,
-    js: &[String],
-) -> Result<String, String> {
+static LIVE_SUB_GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+static LIVE_SUB_CHILD: std::sync::Mutex<Option<tokio::process::Child>> = std::sync::Mutex::new(None);
+
+fn live_subtitles_stop_inner() {
+    LIVE_SUB_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    if let Some(mut c) = LIVE_SUB_CHILD.lock().unwrap().take() {
+        let _ = c.start_kill();
+    }
+}
+
+#[tauri::command]
+async fn live_subtitles_stop() -> Result<(), String> {
+    live_subtitles_stop_inner();
+    Ok(())
+}
+
+/// Live TV: record the channel's audio in short chunks, run local Whisper on
+/// each one and send the Chinese translation to the UI ("live-subtitle" event).
+#[tauri::command]
+async fn live_subtitles_start(
+    app: tauri::AppHandle,
+    url: String,
+    user_agent: Option<String>,
+    headers: Option<String>,
+) -> Result<(), String> {
+    use std::sync::atomic::Ordering;
+    live_subtitles_stop_inner();
+    let gen = LIVE_SUB_GEN.load(Ordering::SeqCst);
+    let _ = app.emit("live-subtitle", serde_json::json!({ "text": "直播字幕准备中…", "status": true }));
+    let (exe, model) = match ensure_local_whisper().await {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = app.emit(
+                "live-subtitle",
+                serde_json::json!({ "text": format!("直播字幕失败：{e}"), "status": true }),
+            );
+            return Err(e);
+        }
+    };
+    if LIVE_SUB_GEN.load(Ordering::SeqCst) != gen {
+        return Ok(());
+    }
+    let ffmpeg = crate::dvr::recorder::find_ffmpeg(&app).map_err(|e| format!("找不到 ffmpeg：{e}"))?;
+    let dir = std::env::temp_dir().join(format!("ynotv-livesubs-{gen}"));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let mut cmd = tokio::process::Command::new(&ffmpeg);
+    cmd.arg("-loglevel").arg("error").arg("-nostdin");
+    if let Some(ua) = user_agent.as_deref().filter(|u| !u.trim().is_empty()) {
+        cmd.arg("-user_agent").arg(ua);
+    }
+    if let Some(h) = headers.as_deref().filter(|h| !h.trim().is_empty()) {
+        cmd.arg("-headers").arg(h);
+    }
+    if url.starts_with("http") {
+        cmd.arg("-reconnect").arg("1").arg("-reconnect_streamed").arg("1").arg("-reconnect_delay_max").arg("5");
+    }
+    cmd.arg("-i")
+        .arg(&url)
+        .arg("-vn")
+        .arg("-sn")
+        .arg("-dn")
+        .arg("-ac")
+        .arg("1")
+        .arg("-ar")
+        .arg("16000")
+        .arg("-c:a")
+        .arg("pcm_s16le")
+        .arg("-f")
+        .arg("segment")
+        .arg("-segment_time")
+        .arg("12")
+        .arg("-reset_timestamps")
+        .arg("1")
+        .arg(dir.join("chunk_%05d.wav"))
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .kill_on_drop(true);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000);
+    }
+    let child = cmd.spawn().map_err(|e| format!("启动 ffmpeg 失败：{e}"))?;
+    *LIVE_SUB_CHILD.lock().unwrap() = Some(child);
+    let proxy = youtube_proxy_args().await;
+    let client = yt_http_client(&proxy, 20)?;
+    let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).clamp(1, 8);
+    tokio::spawn(async move {
+        let mut n: u32 = 0;
+        let mut idle = 0u32;
+        let mut first = true;
+        while LIVE_SUB_GEN.load(Ordering::SeqCst) == gen {
+            let cur = dir.join(format!("chunk_{:05}.wav", n));
+            let next = dir.join(format!("chunk_{:05}.wav", n + 1));
+            if !next.exists() {
+                idle += 1;
+                if idle == 60 && n == 0 {
+                    let _ = app.emit(
+                        "live-subtitle",
+                        serde_json::json!({ "text": "直播字幕：拿不到这个频道的音频（可能频道只允许一个连接）", "status": true }),
+                    );
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(700)).await;
+                continue;
+            }
+            idle = 0;
+            // Skip a backlog if recognition fell behind, so captions stay close to live.
+            let mut latest = n + 1;
+            while dir.join(format!("chunk_{:05}.wav", latest + 1)).exists() {
+                latest += 1;
+            }
+            if latest > n + 2 {
+                for k in n..latest - 1 {
+                    let _ = std::fs::remove_file(dir.join(format!("chunk_{:05}.wav", k)));
+                }
+                n = latest - 1;
+                continue;
+            }
+            let mut w = tokio::process::Command::new(&exe);
+            if let Some(d) = exe.parent() {
+                w.current_dir(d);
+            }
+            w.arg("-m")
+                .arg(&model)
+                .arg("-f")
+                .arg(&cur)
+                .arg("-l")
+                .arg("auto")
+                .arg("-t")
+                .arg(threads.to_string())
+                .arg("-np")
+                .arg("-nt")
+                .stderr(std::process::Stdio::null())
+                .kill_on_drop(true);
+            #[cfg(target_os = "windows")]
+            {
+                w.creation_flags(0x08000000);
+            }
+            let out = w.output().await;
+            let _ = std::fs::remove_file(&cur);
+            n += 1;
+            let raw = match out {
+                Ok(o) => String::from_utf8_lossy(&o.stdout).to_string(),
+                Err(_) => continue,
+            };
+            let text: String = raw
+                .lines()
+                .map(|l| l.trim())
+                .filter(|l| {
+                    !l.is_empty()
+                        && !((l.starts_with('[') && l.ends_with(']')) || (l.starts_with('(') && l.ends_with(')')))
+                })
+                .collect::<Vec<_>>()
+                .join(" ");
+            if text.chars().filter(|c| c.is_alphanumeric()).count() < 2 {
+                continue;
+            }
+            let zh = google_translate(&client, &text).await.unwrap_or(text);
+            if LIVE_SUB_GEN.load(Ordering::SeqCst) != gen {
+                break;
+            }
+            first = false;
+            let _ = app.emit("live-subtitle", serde_json::json!({ "text": zh }));
+        }
+        let _ = first;
+        let _ = std::fs::remove_dir_all(&dir);
+    });
+    Ok(())
+}
+
+/// Make sure whisper.cpp + the base model are on disk (downloads on first use).
+async fn ensure_local_whisper() -> Result<(std::path::PathBuf, std::path::PathBuf), String> {
     let base = std::env::var("APPDATA")
         .map(std::path::PathBuf::from)
         .or_else(|_| std::env::var("HOME").map(|h| std::path::PathBuf::from(h).join(".config")))
@@ -1775,6 +1939,19 @@ async fn youtube_subtitles_local_whisper(
         .await
         .map_err(|e| format!("下载语音模型失败：{e}"))?;
     }
+    Ok((exe, model))
+}
+
+async fn youtube_subtitles_local_whisper(
+    app: &tauri::AppHandle,
+    ytdl: &str,
+    url: &str,
+    id: &str,
+    dir: &std::path::Path,
+    js: &[String],
+) -> Result<String, String> {
+    let (exe, model) = ensure_local_whisper().await?;
+    let proxy = youtube_proxy_args().await;
     // 3) audio -> 16 kHz mono wav
     let adir = dir.join("audio");
     let audio = youtube_download_audio(ytdl, url, id, &adir, js).await?;
@@ -2467,6 +2644,7 @@ async fn mpv_load<R: Runtime>(
     #[cfg(target_os = "windows")]
     let native_dash_was_active = native_dash::is_active();
     native_dash::cancel_active();
+    live_subtitles_stop_inner();
     if let Some(config) = native_dash {
         if config.manifest_url != url {
             return Err("Native DASH manifest configuration mismatch".into());
@@ -2578,6 +2756,7 @@ async fn mpv_resume<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
 
 #[tauri::command]
 async fn mpv_stop<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    live_subtitles_stop_inner();
     #[cfg(target_os = "windows")]
     let engine = get_player_engine(&app).await;
     native_dash::cancel_active();
@@ -6875,6 +7054,8 @@ pub fn run() {
             mpv_seek,
             mpv_cycle_audio,
             mpv_cycle_sub,
+            live_subtitles_start,
+            live_subtitles_stop,
             mpv_toggle_mute,
             mpv_toggle_stats,
             mpv_toggle_fullscreen,

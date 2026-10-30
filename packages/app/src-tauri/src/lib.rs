@@ -1465,6 +1465,90 @@ async fn youtube_resolve(url: String, cookies: Option<String>) -> Result<String,
     }
 }
 
+/// Download Chinese subtitles for a YouTube video: the uploader's own Chinese
+/// track when there is one, otherwise YouTube's machine translation of the
+/// captions (auto-translate). Returns the local .vtt path, or Err when the
+/// video has no captions to translate.
+#[tauri::command]
+async fn youtube_subtitles(url: String) -> Result<String, String> {
+    let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
+    let dir = std::env::temp_dir().join("ynotv-ytsubs");
+    let _ = std::fs::create_dir_all(&dir);
+    let id: String = url
+        .split(|c| c == '=' || c == '/' || c == '&' || c == '?')
+        .filter(|p| p.len() == 11)
+        .last()
+        .unwrap_or("video")
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_')
+        .collect();
+    // Reuse a subtitle fetched earlier for the same video.
+    let find = |dir: &std::path::Path| -> Option<String> {
+        let mut best: Option<(u8, String)> = None;
+        for e in std::fs::read_dir(dir).ok()?.flatten() {
+            let name = e.file_name().to_string_lossy().to_string();
+            if !name.starts_with(&format!("{id}.")) || !name.ends_with(".vtt") {
+                continue;
+            }
+            let rank = if name.contains(".zh-Hans.") || name.contains(".zh-CN.") { 0 }
+                else if name.contains(".zh.") { 1 }
+                else { 2 };
+            if best.as_ref().map_or(true, |(r, _)| rank < *r) {
+                best = Some((rank, e.path().to_string_lossy().to_string()));
+            }
+        }
+        best.map(|(_, p)| p)
+    };
+    if let Some(p) = find(&dir) {
+        return Ok(p);
+    }
+    let js = youtube_js_runtime_args().await;
+    let mut cmd = tokio::process::Command::new(&ytdl);
+    cmd.arg("--skip-download")
+        .arg("--no-warnings")
+        .arg("--no-playlist")
+        .arg("--write-subs")
+        .arg("--write-auto-subs")
+        .arg("--sub-langs")
+        .arg("zh-Hans,zh-CN,zh")
+        .arg("--sub-format")
+        .arg("vtt/best")
+        .arg("--convert-subs")
+        .arg("vtt")
+        .arg("--sleep-subtitles")
+        .arg("0")
+        .arg("-o")
+        .arg(dir.join(format!("{id}.%(ext)s")).to_string_lossy().to_string());
+    if let Some(f) = youtube_cookie_file().filter(|f| f.exists()) {
+        cmd.arg("--cookies").arg(f);
+    }
+    for p in youtube_proxy_args().await {
+        cmd.arg(p);
+    }
+    for a in &js {
+        cmd.arg(a);
+    }
+    cmd.arg(&url);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    let out = tokio::time::timeout(std::time::Duration::from_secs(90), cmd.output())
+        .await
+        .map_err(|_| "字幕下载超时".to_string())?
+        .map_err(|e| e.to_string())?;
+    if let Some(p) = find(&dir) {
+        return Ok(p);
+    }
+    let err = String::from_utf8_lossy(&out.stderr);
+    Err(err
+        .lines()
+        .filter(|l| l.contains("ERROR"))
+        .last()
+        .unwrap_or("这个视频没有可翻译的字幕")
+        .to_string())
+}
+
 fn youtube_cookie_file() -> Option<std::path::PathBuf> {
     std::env::var("APPDATA")
         .map(std::path::PathBuf::from)
@@ -6390,6 +6474,7 @@ pub fn run() {
             ytdlp_info,
             youtube_search,
             youtube_resolve,
+            youtube_subtitles,
             youtube_login_open,
             youtube_login_save,
             update_ytdlp,

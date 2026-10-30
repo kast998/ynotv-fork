@@ -3005,6 +3005,24 @@ export function usePlayback(options: UsePlaybackOptions): PlaybackState {
         }
       }
       
+      // YouTube: fetch Chinese subtitles (the uploader's Chinese track, or
+      // YouTube's machine translation) in the background and add them once ready.
+      if (info.source_id === 'youtube' && typeof info.mediaId === 'string' && info.mediaId.startsWith('youtube:')) {
+        let zhOn = true;
+        try { zhOn = localStorage.getItem('youtube-zh-subs') !== 'off'; } catch { /* ignore */ }
+        if (zhOn) {
+          const ytId = info.mediaId.slice('youtube:'.length);
+          const startedFor = info.mediaId;
+          void invoke<string>('youtube_subtitles', { url: `https://www.youtube.com/watch?v=${ytId}` })
+            .then(async (subPath) => {
+              if (vodInfoRef.current?.mediaId !== startedFor) return;
+              await Bridge.addSubtitleFile(subPath, 'select', '中文（AI 翻译）', 'zh');
+              hasManualSubtitleSelectionRef.current = true;
+            })
+            .catch((e) => logWarn('[YouTube] Chinese subtitles unavailable:', e));
+        }
+      }
+
       // Resume from saved position if available. Jellyfin's server position is
       // carried in startTimeTicks by the captured URL and must not be replaced
       // by ynoTV's local history (which is intentionally skipped above).

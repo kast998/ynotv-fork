@@ -1540,6 +1540,12 @@ async fn youtube_subtitles(url: String) -> Result<String, String> {
     if let Some(p) = find(&dir) {
         return Ok(p);
     }
+    // Fallback (e.g. YouTube rate-limits its auto-translated track with 429):
+    // fetch the original-language subtitles and translate them ourselves.
+    match youtube_subtitles_fallback(&ytdl, &url, &id, &dir, &js).await {
+        Ok(p) => return Ok(p),
+        Err(e) => log::warn!("[youtube_subtitles] fallback failed: {e}"),
+    }
     let err = String::from_utf8_lossy(&out.stderr);
     Err(err
         .lines()
@@ -1547,6 +1553,186 @@ async fn youtube_subtitles(url: String) -> Result<String, String> {
         .last()
         .unwrap_or("这个视频没有可翻译的字幕")
         .to_string())
+}
+
+async fn youtube_subtitles_fallback(
+    ytdl: &str,
+    url: &str,
+    id: &str,
+    dir: &std::path::Path,
+    js: &[String],
+) -> Result<String, String> {
+    let odir = dir.join("orig");
+    let _ = std::fs::create_dir_all(&odir);
+    let mut cmd = tokio::process::Command::new(ytdl);
+    cmd.arg("--skip-download")
+        .arg("--no-warnings")
+        .arg("--no-playlist")
+        .arg("--write-subs")
+        .arg("--write-auto-subs")
+        .arg("--sub-langs")
+        .arg(".*-orig,en,en-US,en-GB")
+        .arg("--sub-format")
+        .arg("vtt/best")
+        .arg("--convert-subs")
+        .arg("vtt")
+        .arg("-o")
+        .arg(odir.join(format!("{id}.%(ext)s")).to_string_lossy().to_string());
+    if let Some(f) = youtube_cookie_file().filter(|f| f.exists()) {
+        cmd.arg("--cookies").arg(f);
+    }
+    let proxy = youtube_proxy_args().await;
+    for p in &proxy {
+        cmd.arg(p);
+    }
+    for a in js {
+        cmd.arg(a);
+    }
+    cmd.arg(url);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    let _ = tokio::time::timeout(std::time::Duration::from_secs(90), cmd.output())
+        .await
+        .map_err(|_| "原文字幕下载超时".to_string())?
+        .map_err(|e| e.to_string())?;
+    // Prefer the original-language track, then manual English.
+    let mut src: Option<(u8, std::path::PathBuf)> = None;
+    for e in std::fs::read_dir(&odir).map_err(|e| e.to_string())?.flatten() {
+        let name = e.file_name().to_string_lossy().to_string();
+        if !name.starts_with(&format!("{id}.")) || !name.ends_with(".vtt") {
+            continue;
+        }
+        let rank = if name.contains("-orig.") { 0 } else { 1 };
+        if src.as_ref().map_or(true, |(r, _)| rank < *r) {
+            src = Some((rank, e.path()));
+        }
+    }
+    let (_, src) = src.ok_or_else(|| "这个视频没有原文字幕".to_string())?;
+    let text = std::fs::read_to_string(&src).map_err(|e| e.to_string())?;
+    let cues = parse_vtt_cues(&text);
+    if cues.is_empty() {
+        return Err("原文字幕为空".into());
+    }
+    let mut builder = reqwest::Client::builder().timeout(std::time::Duration::from_secs(30));
+    if let Some(p) = proxy.get(1) {
+        if let Ok(px) = reqwest::Proxy::all(p) {
+            builder = builder.proxy(px);
+        }
+    }
+    let client = builder.build().map_err(|e| e.to_string())?;
+    let lines: Vec<String> = cues.iter().map(|c| c.2.replace('\n', " ")).collect();
+    let mut zh: Vec<String> = Vec::with_capacity(lines.len());
+    let mut i = 0;
+    while i < lines.len() {
+        let mut j = i;
+        let mut len = 0;
+        while j < lines.len() && (j == i || len + lines[j].len() < 3500) && j - i < 80 {
+            len += lines[j].len() + 1;
+            j += 1;
+        }
+        let batch = &lines[i..j];
+        let out = google_translate(&client, &batch.join("\n")).await?;
+        let parts: Vec<String> = out.split('\n').map(|s| s.trim().to_string()).collect();
+        if parts.len() == batch.len() {
+            zh.extend(parts);
+        } else {
+            for l in batch {
+                zh.push(google_translate(&client, l).await.unwrap_or_else(|_| l.clone()));
+            }
+        }
+        i = j;
+    }
+    let mut vtt = String::from("WEBVTT\n\n");
+    for (k, (start, end, _)) in cues.iter().enumerate() {
+        vtt.push_str(&format!("{start} --> {end}\n{}\n\n", zh.get(k).map(|s| s.as_str()).unwrap_or("")));
+    }
+    let outp = dir.join(format!("{id}.zh-Hans.vtt"));
+    std::fs::write(&outp, vtt).map_err(|e| e.to_string())?;
+    Ok(outp.to_string_lossy().to_string())
+}
+
+async fn google_translate(client: &reqwest::Client, text: &str) -> Result<String, String> {
+    let resp = client
+        .post("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t")
+        .form(&[("q", text)])
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        return Err(format!("翻译失败 HTTP {}", resp.status()));
+    }
+    let v: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    let mut out = String::new();
+    if let Some(arr) = v.get(0).and_then(|a| a.as_array()) {
+        for seg in arr {
+            if let Some(t) = seg.get(0).and_then(|t| t.as_str()) {
+                out.push_str(t);
+            }
+        }
+    }
+    if out.is_empty() {
+        return Err("翻译结果为空".into());
+    }
+    Ok(out)
+}
+
+/// Parse a WebVTT file into (start, end, text) cues, cleaning YouTube's
+/// rolling auto-caption format (inline timing tags, repeated lines).
+fn parse_vtt_cues(text: &str) -> Vec<(String, String, String)> {
+    let tag = regex::Regex::new(r"<[^>]*>").unwrap();
+    let secs = |t: &str| -> f64 {
+        let parts: Vec<f64> = t.replace(',', ".").split(':').filter_map(|x| x.parse().ok()).collect();
+        parts.iter().fold(0.0, |acc, x| acc * 60.0 + x)
+    };
+    let mut cues: Vec<(String, String, String)> = Vec::new();
+    let mut recent: Vec<String> = Vec::new();
+    let norm = text.replace("\r\n", "\n");
+    for block in norm.split("\n\n") {
+        let mut lines = block.lines();
+        let mut timing = None;
+        for l in lines.by_ref() {
+            if l.contains("-->") {
+                timing = Some(l.to_string());
+                break;
+            }
+        }
+        let Some(timing) = timing else { continue };
+        let mut it = timing.split_whitespace();
+        let (Some(start), Some(_), Some(end)) = (it.next(), it.next(), it.next()) else { continue };
+        if secs(end) - secs(start) < 0.05 {
+            continue;
+        }
+        let mut fresh: Vec<String> = Vec::new();
+        for l in lines {
+            let t = tag
+                .replace_all(l, "")
+                .replace("&amp;", "&")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&nbsp;", " ")
+                .trim()
+                .to_string();
+            if t.is_empty() || recent.contains(&t) {
+                continue;
+            }
+            recent.push(t.clone());
+            if recent.len() > 3 {
+                recent.remove(0);
+            }
+            fresh.push(t);
+        }
+        if fresh.is_empty() {
+            // Same text continues: extend the previous cue.
+            if let Some(last) = cues.last_mut() {
+                last.1 = end.to_string();
+            }
+            continue;
+        }
+        cues.push((start.to_string(), end.to_string(), fresh.join(" ")));
+    }
+    cues
 }
 
 fn youtube_cookie_file() -> Option<std::path::PathBuf> {

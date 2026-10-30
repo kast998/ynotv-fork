@@ -138,6 +138,14 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
   };
 
   const [loginOpen, setLoginOpen] = useState(false);
+  const [zhSubs, setZhSubs] = useState<boolean>(() => {
+    try { return localStorage.getItem('youtube-zh-subs') !== 'off'; } catch { return true; }
+  });
+  const toggleZhSubs = () => {
+    const next = !zhSubs;
+    setZhSubs(next);
+    try { localStorage.setItem('youtube-zh-subs', next ? 'on' : 'off'); } catch { /* ignore */ }
+  };
   const [notice, setNotice] = useState<string | null>(null);
   const openLogin = async () => {
     setError(null);
@@ -235,6 +243,15 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
           title="在内置窗口登录 YouTube，保存后播放时自动使用"
         >
           {loginOpen ? '保存登录' : '登录 YouTube'}
+        </button>
+        <button
+          className="tvbox-btn"
+          type="button"
+          onClick={toggleZhSubs}
+          style={zhSubs ? { background: '#e33', color: '#fff', borderColor: '#e33' } : undefined}
+          title="播放时自动加载中文字幕：有官方中文用官方的，没有就用 YouTube 的 AI 机翻"
+        >
+          {zhSubs ? '中文字幕：开' : '中文字幕：关'}
         </button>
       </form>
       {loginOpen && (

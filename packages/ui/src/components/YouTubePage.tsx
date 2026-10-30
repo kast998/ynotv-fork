@@ -141,6 +141,17 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
   const [zhSubs, setZhSubs] = useState<boolean>(() => {
     try { return localStorage.getItem('youtube-zh-subs') !== 'off'; } catch { return true; }
   });
+  const [groqKey, setGroqKey] = useState<string>(() => {
+    try { return localStorage.getItem('groq-api-key') || ''; } catch { return ''; }
+  });
+  const [groqOpen, setGroqOpen] = useState(false);
+  const saveGroqKey = (v: string) => {
+    setGroqKey(v);
+    try {
+      if (v.trim()) localStorage.setItem('groq-api-key', v.trim());
+      else localStorage.removeItem('groq-api-key');
+    } catch { /* ignore */ }
+  };
   const toggleZhSubs = () => {
     const next = !zhSubs;
     setZhSubs(next);
@@ -253,7 +264,28 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
         >
           {zhSubs ? '中文字幕：开' : '中文字幕：关'}
         </button>
+        <button
+          className="tvbox-btn"
+          type="button"
+          onClick={() => setGroqOpen((o) => !o)}
+          title="没有字幕的视频，用 Groq Whisper 听语音生成中文字幕"
+        >
+          {groqKey ? '语音识别：已设置' : '语音识别 Key'}
+        </button>
       </form>
+      {groqOpen && (
+        <div className="tvbox-hint" style={{ padding: '6px 2px', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input
+            className="tvbox-input"
+            type="password"
+            value={groqKey}
+            onChange={(e) => saveGroqKey(e.target.value)}
+            placeholder="粘贴 Groq API Key（gsk_ 开头），只保存在本机"
+            style={{ flex: 1 }}
+          />
+          <button className="tvbox-btn" type="button" onClick={() => setGroqOpen(false)}>完成</button>
+        </div>
+      )}
       {loginOpen && (
         <div className="tvbox-hint" style={{ padding: '6px 2px', opacity: 0.85 }}>
           在弹出的窗口里登录，看到 YouTube 首页后，回来点“保存登录”。

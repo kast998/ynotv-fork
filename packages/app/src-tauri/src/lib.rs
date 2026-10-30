@@ -1470,7 +1470,7 @@ async fn youtube_resolve(url: String, cookies: Option<String>) -> Result<String,
 /// captions (auto-translate). Returns the local .vtt path, or Err when the
 /// video has no captions to translate.
 #[tauri::command]
-async fn youtube_subtitles(url: String) -> Result<String, String> {
+async fn youtube_subtitles(url: String, groq_key: Option<String>) -> Result<String, String> {
     let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
     let dir = std::env::temp_dir().join("ynotv-ytsubs");
     let _ = std::fs::create_dir_all(&dir);
@@ -1546,6 +1546,11 @@ async fn youtube_subtitles(url: String) -> Result<String, String> {
         Ok(p) => return Ok(p),
         Err(e) => log::warn!("[youtube_subtitles] fallback failed: {e}"),
     }
+    // No subtitles at all: transcribe the audio with Groq Whisper, then translate.
+    if let Some(key) = groq_key.filter(|k| !k.trim().is_empty()) {
+        return youtube_subtitles_whisper(&ytdl, &url, &id, &dir, &js, key.trim()).await
+            .map_err(|e| format!("语音识别失败：{e}"));
+    }
     let err = String::from_utf8_lossy(&out.stderr);
     Err(err
         .lines()
@@ -1615,13 +1620,25 @@ async fn youtube_subtitles_fallback(
     if cues.is_empty() {
         return Err("原文字幕为空".into());
     }
-    let mut builder = reqwest::Client::builder().timeout(std::time::Duration::from_secs(30));
+    let client = yt_http_client(&proxy, 30)?;
+    translate_cues_to_vtt(&client, &cues, &dir.join(format!("{id}.zh-Hans.vtt"))).await
+}
+
+fn yt_http_client(proxy: &[String], timeout: u64) -> Result<reqwest::Client, String> {
+    let mut builder = reqwest::Client::builder().timeout(std::time::Duration::from_secs(timeout));
     if let Some(p) = proxy.get(1) {
         if let Ok(px) = reqwest::Proxy::all(p) {
             builder = builder.proxy(px);
         }
     }
-    let client = builder.build().map_err(|e| e.to_string())?;
+    builder.build().map_err(|e| e.to_string())
+}
+
+async fn translate_cues_to_vtt(
+    client: &reqwest::Client,
+    cues: &[(String, String, String)],
+    outp: &std::path::Path,
+) -> Result<String, String> {
     let lines: Vec<String> = cues.iter().map(|c| c.2.replace('\n', " ")).collect();
     let mut zh: Vec<String> = Vec::with_capacity(lines.len());
     let mut i = 0;
@@ -1633,13 +1650,13 @@ async fn youtube_subtitles_fallback(
             j += 1;
         }
         let batch = &lines[i..j];
-        let out = google_translate(&client, &batch.join("\n")).await?;
+        let out = google_translate(client, &batch.join("\n")).await?;
         let parts: Vec<String> = out.split('\n').map(|s| s.trim().to_string()).collect();
         if parts.len() == batch.len() {
             zh.extend(parts);
         } else {
             for l in batch {
-                zh.push(google_translate(&client, l).await.unwrap_or_else(|_| l.clone()));
+                zh.push(google_translate(client, l).await.unwrap_or_else(|_| l.clone()));
             }
         }
         i = j;
@@ -1648,9 +1665,116 @@ async fn youtube_subtitles_fallback(
     for (k, (start, end, _)) in cues.iter().enumerate() {
         vtt.push_str(&format!("{start} --> {end}\n{}\n\n", zh.get(k).map(|s| s.as_str()).unwrap_or("")));
     }
-    let outp = dir.join(format!("{id}.zh-Hans.vtt"));
-    std::fs::write(&outp, vtt).map_err(|e| e.to_string())?;
+    std::fs::write(outp, vtt).map_err(|e| e.to_string())?;
     Ok(outp.to_string_lossy().to_string())
+}
+
+fn vtt_time(t: f64) -> String {
+    let ms = (t.max(0.0) * 1000.0).round() as u64;
+    format!("{:02}:{:02}:{:02}.{:03}", ms / 3_600_000, (ms / 60_000) % 60, (ms / 1000) % 60, ms % 1000)
+}
+
+async fn youtube_subtitles_whisper(
+    ytdl: &str,
+    url: &str,
+    id: &str,
+    dir: &std::path::Path,
+    js: &[String],
+    key: &str,
+) -> Result<String, String> {
+    let adir = dir.join("audio");
+    let _ = std::fs::create_dir_all(&adir);
+    // Low-bitrate audio-only formats keep the upload under Groq's 25 MB limit.
+    let mut cmd = tokio::process::Command::new(ytdl);
+    cmd.arg("--no-warnings")
+        .arg("--no-playlist")
+        .arg("-f")
+        .arg("139/249/250/ba[abr<=96]/worstaudio")
+        .arg("-o")
+        .arg(adir.join(format!("{id}.%(ext)s")).to_string_lossy().to_string());
+    if let Some(f) = youtube_cookie_file().filter(|f| f.exists()) {
+        cmd.arg("--cookies").arg(f);
+    }
+    let proxy = youtube_proxy_args().await;
+    for p in &proxy {
+        cmd.arg(p);
+    }
+    for a in js {
+        cmd.arg(a);
+    }
+    cmd.arg(url);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    let out = tokio::time::timeout(std::time::Duration::from_secs(300), cmd.output())
+        .await
+        .map_err(|_| "音频下载超时".to_string())?
+        .map_err(|e| e.to_string())?;
+    let audio = std::fs::read_dir(&adir)
+        .map_err(|e| e.to_string())?
+        .flatten()
+        .map(|e| e.path())
+        .find(|p| {
+            let n = p.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+            n.starts_with(&format!("{id}.")) && !n.ends_with(".part") && !n.ends_with(".ytdl")
+        })
+        .ok_or_else(|| {
+            let err = String::from_utf8_lossy(&out.stderr);
+            err.lines().filter(|l| l.contains("ERROR")).last().unwrap_or("音频下载失败").to_string()
+        })?;
+    let bytes = std::fs::read(&audio).map_err(|e| e.to_string())?;
+    let _ = std::fs::remove_file(&audio);
+    if bytes.len() > 25 * 1024 * 1024 {
+        return Err("视频太长（音频超过 25MB，约 1 小时以上）".into());
+    }
+    let fname = audio.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| "audio.m4a".into());
+    let boundary = "----ynotvGroqBoundary7MA4YWxkTrZu0gW";
+    let mut body: Vec<u8> = Vec::with_capacity(bytes.len() + 1024);
+    for (k, v) in [("model", "whisper-large-v3-turbo"), ("response_format", "verbose_json"), ("temperature", "0")] {
+        body.extend_from_slice(format!("--{boundary}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n").as_bytes());
+    }
+    body.extend_from_slice(
+        format!("--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{fname}\"\r\nContent-Type: application/octet-stream\r\n\r\n").as_bytes(),
+    );
+    body.extend_from_slice(&bytes);
+    body.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
+    let client = yt_http_client(&proxy, 300)?;
+    let resp = client
+        .post("https://api.groq.com/openai/v1/audio/transcriptions")
+        .bearer_auth(key)
+        .header("Content-Type", format!("multipart/form-data; boundary={boundary}"))
+        .body(body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    let status = resp.status();
+    let v: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    if !status.is_success() {
+        let msg = v.pointer("/error/message").and_then(|m| m.as_str()).unwrap_or("");
+        return Err(match status.as_u16() {
+            401 => "Groq key 无效".to_string(),
+            429 => format!("Groq 免费额度用完了，稍后再试（{msg}）"),
+            _ => format!("Groq HTTP {status} {msg}"),
+        });
+    }
+    let mut cues: Vec<(String, String, String)> = Vec::new();
+    if let Some(segs) = v.get("segments").and_then(|s| s.as_array()) {
+        for seg in segs {
+            let text = seg.get("text").and_then(|t| t.as_str()).unwrap_or("").trim().to_string();
+            if text.is_empty() {
+                continue;
+            }
+            let st = seg.get("start").and_then(|t| t.as_f64()).unwrap_or(0.0);
+            let en = seg.get("end").and_then(|t| t.as_f64()).unwrap_or(st + 2.0);
+            cues.push((vtt_time(st), vtt_time(en), text));
+        }
+    }
+    if cues.is_empty() {
+        return Err("没识别到语音".into());
+    }
+    let client = yt_http_client(&proxy, 30)?;
+    translate_cues_to_vtt(&client, &cues, &dir.join(format!("{id}.zh-Hans.vtt"))).await
 }
 
 async fn google_translate(client: &reqwest::Client, text: &str) -> Result<String, String> {

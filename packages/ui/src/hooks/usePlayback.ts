@@ -3013,7 +3013,9 @@ export function usePlayback(options: UsePlaybackOptions): PlaybackState {
         if (zhOn) {
           const ytId = info.mediaId.slice('youtube:'.length);
           const startedFor = info.mediaId;
-          void invoke<string>('youtube_subtitles', { url: `https://www.youtube.com/watch?v=${ytId}` })
+          let groqKey: string | null = null;
+          try { groqKey = localStorage.getItem('groq-api-key'); } catch { /* ignore */ }
+          void invoke<string>('youtube_subtitles', { url: `https://www.youtube.com/watch?v=${ytId}`, groqKey })
             .then(async (subPath) => {
               if (vodInfoRef.current?.mediaId !== startedFor) return;
               await Bridge.addSubtitleFile(subPath, 'select', '中文（AI 翻译）', 'zh');

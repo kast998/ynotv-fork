@@ -1470,7 +1470,7 @@ async fn youtube_resolve(url: String, cookies: Option<String>) -> Result<String,
 /// captions (auto-translate). Returns the local .vtt path, or Err when the
 /// video has no captions to translate.
 #[tauri::command]
-async fn youtube_subtitles(url: String, groq_key: Option<String>) -> Result<String, String> {
+async fn youtube_subtitles(app: tauri::AppHandle, url: String, groq_key: Option<String>, local_whisper: Option<bool>) -> Result<String, String> {
     let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
     let dir = std::env::temp_dir().join("ynotv-ytsubs");
     let _ = std::fs::create_dir_all(&dir);
@@ -1551,6 +1551,11 @@ async fn youtube_subtitles(url: String, groq_key: Option<String>) -> Result<Stri
         return youtube_subtitles_whisper(&ytdl, &url, &id, &dir, &js, key.trim()).await
             .map_err(|e| format!("语音识别失败：{e}"));
     }
+    // Or run whisper.cpp on this PC (downloaded on first use).
+    if local_whisper.unwrap_or(false) {
+        return youtube_subtitles_local_whisper(&app, &ytdl, &url, &id, &dir, &js).await
+            .map_err(|e| format!("本地语音识别失败：{e}"));
+    }
     let err = String::from_utf8_lossy(&out.stderr);
     Err(err
         .lines()
@@ -1619,6 +1624,207 @@ async fn youtube_subtitles_fallback(
     let cues = parse_vtt_cues(&text);
     if cues.is_empty() {
         return Err("原文字幕为空".into());
+    }
+    let client = yt_http_client(&proxy, 30)?;
+    translate_cues_to_vtt(&client, &cues, &dir.join(format!("{id}.zh-Hans.vtt"))).await
+}
+
+/// Download a low-bitrate audio-only stream of the video into `adir`.
+async fn youtube_download_audio(
+    ytdl: &str,
+    url: &str,
+    id: &str,
+    adir: &std::path::Path,
+    js: &[String],
+) -> Result<std::path::PathBuf, String> {
+    let _ = std::fs::create_dir_all(adir);
+    let mut cmd = tokio::process::Command::new(ytdl);
+    cmd.arg("--no-warnings")
+        .arg("--no-playlist")
+        .arg("-f")
+        .arg("139/249/250/ba[abr<=96]/worstaudio")
+        .arg("-o")
+        .arg(adir.join(format!("{id}.%(ext)s")).to_string_lossy().to_string());
+    if let Some(f) = youtube_cookie_file().filter(|f| f.exists()) {
+        cmd.arg("--cookies").arg(f);
+    }
+    for p in youtube_proxy_args().await {
+        cmd.arg(p);
+    }
+    for a in js {
+        cmd.arg(a);
+    }
+    cmd.arg(url);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    let out = tokio::time::timeout(std::time::Duration::from_secs(600), cmd.output())
+        .await
+        .map_err(|_| "音频下载超时".to_string())?
+        .map_err(|e| e.to_string())?;
+    std::fs::read_dir(adir)
+        .map_err(|e| e.to_string())?
+        .flatten()
+        .map(|e| e.path())
+        .find(|p| {
+            let n = p.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+            n.starts_with(&format!("{id}.")) && !n.ends_with(".part") && !n.ends_with(".ytdl") && !n.ends_with(".wav")
+        })
+        .ok_or_else(|| {
+            let err = String::from_utf8_lossy(&out.stderr);
+            err.lines().filter(|l| l.contains("ERROR")).last().unwrap_or("音频下载失败").to_string()
+        })
+}
+
+async fn download_to_file(client: &reqwest::Client, urls: &[&str], dest: &std::path::Path) -> Result<(), String> {
+    let mut last = String::from("下载失败");
+    for u in urls {
+        match client.get(*u).send().await {
+            Ok(r) if r.status().is_success() => match r.bytes().await {
+                Ok(b) if b.len() > 1024 => {
+                    let part = dest.with_extension("part");
+                    std::fs::write(&part, &b).map_err(|e| e.to_string())?;
+                    std::fs::rename(&part, dest).map_err(|e| e.to_string())?;
+                    return Ok(());
+                }
+                Ok(_) => last = format!("{u}: 文件为空"),
+                Err(e) => last = format!("{u}: {e}"),
+            },
+            Ok(r) => last = format!("{u}: HTTP {}", r.status()),
+            Err(e) => last = format!("{u}: {e}"),
+        }
+    }
+    Err(last)
+}
+
+fn find_file_named(dir: &std::path::Path, name: &str) -> Option<std::path::PathBuf> {
+    for e in std::fs::read_dir(dir).ok()?.flatten() {
+        let p = e.path();
+        if p.is_dir() {
+            if let Some(f) = find_file_named(&p, name) {
+                return Some(f);
+            }
+        } else if p.file_name().map(|n| n.eq_ignore_ascii_case(name)).unwrap_or(false) {
+            return Some(p);
+        }
+    }
+    None
+}
+
+async fn youtube_subtitles_local_whisper(
+    app: &tauri::AppHandle,
+    ytdl: &str,
+    url: &str,
+    id: &str,
+    dir: &std::path::Path,
+    js: &[String],
+) -> Result<String, String> {
+    let base = std::env::var("APPDATA")
+        .map(std::path::PathBuf::from)
+        .or_else(|_| std::env::var("HOME").map(|h| std::path::PathBuf::from(h).join(".config")))
+        .map_err(|e| e.to_string())?
+        .join("ynotv")
+        .join("whisper");
+    let _ = std::fs::create_dir_all(&base);
+    let proxy = youtube_proxy_args().await;
+    let dl = yt_http_client(&proxy, 1800)?;
+    // 1) whisper.cpp CLI (≈9 MB, first use only)
+    let exe_name = if cfg!(windows) { "whisper-cli.exe" } else { "whisper-cli" };
+    let exe = match find_file_named(&base, exe_name) {
+        Some(p) => p,
+        None => {
+            if !cfg!(windows) {
+                return Err("本地语音识别目前只支持 Windows".into());
+            }
+            let zip = base.join("whisper-bin-x64.zip");
+            download_to_file(
+                &dl,
+                &[
+                    "https://github.com/ggml-org/whisper.cpp/releases/download/b5454/whisper-bin-x64.zip",
+                    "https://gh-proxy.com/https://github.com/ggml-org/whisper.cpp/releases/download/b5454/whisper-bin-x64.zip",
+                ],
+                &zip,
+            )
+            .await
+            .map_err(|e| format!("下载 whisper 程序失败：{e}"))?;
+            let mut cmd = tokio::process::Command::new("tar");
+            cmd.arg("-xf").arg(&zip).arg("-C").arg(&base);
+            #[cfg(target_os = "windows")]
+            {
+                cmd.creation_flags(0x08000000);
+            }
+            let out = cmd.output().await.map_err(|e| format!("解压失败：{e}"))?;
+            let _ = std::fs::remove_file(&zip);
+            find_file_named(&base, exe_name).ok_or_else(|| {
+                format!("解压后找不到 whisper-cli：{}", String::from_utf8_lossy(&out.stderr))
+            })?
+        }
+    };
+    // 2) model (ggml-base, ≈148 MB, first use only)
+    let model = base.join("ggml-base.bin");
+    if !model.exists() {
+        download_to_file(
+            &dl,
+            &[
+                "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
+                "https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
+            ],
+            &model,
+        )
+        .await
+        .map_err(|e| format!("下载语音模型失败：{e}"))?;
+    }
+    // 3) audio -> 16 kHz mono wav
+    let adir = dir.join("audio");
+    let audio = youtube_download_audio(ytdl, url, id, &adir, js).await?;
+    let ffmpeg = crate::dvr::recorder::find_ffmpeg(app).map_err(|e| format!("找不到 ffmpeg：{e}"))?;
+    let wav = adir.join(format!("{id}.wav"));
+    let mut cmd = tokio::process::Command::new(&ffmpeg);
+    cmd.arg("-y").arg("-loglevel").arg("error").arg("-i").arg(&audio)
+        .arg("-ar").arg("16000").arg("-ac").arg("1").arg("-c:a").arg("pcm_s16le").arg(&wav);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000);
+    }
+    let out = cmd.output().await.map_err(|e| e.to_string())?;
+    let _ = std::fs::remove_file(&audio);
+    if !wav.exists() {
+        return Err(format!("音频转换失败：{}", String::from_utf8_lossy(&out.stderr)));
+    }
+    // 4) transcribe
+    let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).clamp(1, 8);
+    let of = adir.join(format!("{id}.whisper"));
+    let mut cmd = tokio::process::Command::new(&exe);
+    if let Some(d) = exe.parent() {
+        cmd.current_dir(d);
+    }
+    cmd.arg("-m").arg(&model)
+        .arg("-f").arg(&wav)
+        .arg("-l").arg("auto")
+        .arg("-t").arg(threads.to_string())
+        .arg("-np")
+        .arg("-ovtt")
+        .arg("-of").arg(&of);
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000);
+    }
+    let out = tokio::time::timeout(std::time::Duration::from_secs(3600), cmd.output())
+        .await
+        .map_err(|_| "识别超时（超过 1 小时）".to_string())?
+        .map_err(|e| e.to_string())?;
+    let _ = std::fs::remove_file(&wav);
+    let vtt_path = of.with_extension("whisper.vtt");
+    let vtt_path = if vtt_path.exists() { vtt_path } else { std::path::PathBuf::from(format!("{}.vtt", of.to_string_lossy())) };
+    let text = std::fs::read_to_string(&vtt_path).map_err(|_| {
+        let err = String::from_utf8_lossy(&out.stderr);
+        err.lines().filter(|l| !l.trim().is_empty()).last().unwrap_or("whisper 没有输出").to_string()
+    })?;
+    let _ = std::fs::remove_file(&vtt_path);
+    let cues = parse_vtt_cues(&text);
+    if cues.is_empty() {
+        return Err("没识别到语音".into());
     }
     let client = yt_http_client(&proxy, 30)?;
     translate_cues_to_vtt(&client, &cues, &dir.join(format!("{id}.zh-Hans.vtt"))).await

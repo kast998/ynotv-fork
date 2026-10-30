@@ -145,6 +145,14 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     try { return localStorage.getItem('groq-api-key') || ''; } catch { return ''; }
   });
   const [groqOpen, setGroqOpen] = useState(false);
+  const [localWhisper, setLocalWhisper] = useState<boolean>(() => {
+    try { return localStorage.getItem('youtube-local-whisper') !== 'off'; } catch { return true; }
+  });
+  const toggleLocalWhisper = () => {
+    const next = !localWhisper;
+    setLocalWhisper(next);
+    try { localStorage.setItem('youtube-local-whisper', next ? 'on' : 'off'); } catch { /* ignore */ }
+  };
   const saveGroqKey = (v: string) => {
     setGroqKey(v);
     try {
@@ -270,7 +278,16 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
           onClick={() => setGroqOpen((o) => !o)}
           title="没有字幕的视频，用 Groq Whisper 听语音生成中文字幕"
         >
-          {groqKey ? '语音识别：已设置' : '语音识别 Key'}
+          {groqKey ? 'Groq Key：已设置' : 'Groq Key'}
+        </button>
+        <button
+          className="tvbox-btn"
+          type="button"
+          onClick={toggleLocalWhisper}
+          style={localWhisper ? { background: '#e33', color: '#fff', borderColor: '#e33' } : undefined}
+          title="没有字幕的视频，在本机用 Whisper 听语音生成中文字幕（首次会下载约 160MB）"
+        >
+          {localWhisper ? '本地语音识别：开' : '本地语音识别：关'}
         </button>
       </form>
       {groqOpen && (

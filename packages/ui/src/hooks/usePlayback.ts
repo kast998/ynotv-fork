@@ -3015,7 +3015,9 @@ export function usePlayback(options: UsePlaybackOptions): PlaybackState {
           const startedFor = info.mediaId;
           let groqKey: string | null = null;
           try { groqKey = localStorage.getItem('groq-api-key'); } catch { /* ignore */ }
-          void invoke<string>('youtube_subtitles', { url: `https://www.youtube.com/watch?v=${ytId}`, groqKey })
+          let localWhisper = true;
+          try { localWhisper = localStorage.getItem('youtube-local-whisper') !== 'off'; } catch { /* ignore */ }
+          void invoke<string>('youtube_subtitles', { url: `https://www.youtube.com/watch?v=${ytId}`, groqKey, localWhisper })
             .then(async (subPath) => {
               if (vodInfoRef.current?.mediaId !== startedFor) return;
               await Bridge.addSubtitleFile(subPath, 'select', '中文（AI 翻译）', 'zh');

@@ -5,7 +5,6 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { StoredChannel } from '../db';
 import type { DashTrackCatalog } from '../services/native-dash';
 import './TrackSelectionModal.css';
-import { liveSubsEnabled, setLiveSubsEnabled } from '../services/liveSubs';
 
 interface Track {
   id: number;
@@ -35,7 +34,6 @@ export function TrackSelectionModal({ isOpen, type, onClose, channel }: TrackSel
   const [tracks, setTracks] = useState<Track[]>([]);
   const [ccTracks, setCcTracks] = useState<CCTrack[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [liveOn, setLiveOn] = useState<boolean>(() => liveSubsEnabled());
   const [selectedCcId, setSelectedCcId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [switchingTrackId, setSwitchingTrackId] = useState<number | null>(null);
@@ -463,14 +461,6 @@ export function TrackSelectionModal({ isOpen, type, onClose, channel }: TrackSel
               onClick={() => setActiveTab('settings')}
             >
               Subtitle Settings
-            </button>
-            <button
-              className="track-modal-tab"
-              onClick={() => { const next = !liveOn; setLiveOn(next); setLiveSubsEnabled(next); }}
-              title="电视直播：本地 Whisper 听语音翻成中文字幕（比画面晚约 10 秒）"
-              style={liveOn ? { background: '#e33', color: '#fff' } : undefined}
-            >
-              {liveOn ? '直播中文字幕：开' : '直播中文字幕：关'}
             </button>
           </div>
         ) : (

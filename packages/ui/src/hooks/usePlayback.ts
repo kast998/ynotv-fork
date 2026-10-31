@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { RetryState } from '../components/StreamRetryOverlay';
-import { onLiveChannelLoaded, onNonLiveLoaded } from '../services/liveSubs';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import type { StoredChannel } from '../db';
@@ -258,7 +257,6 @@ async function tryLoadWithFallbacks(
 
   if (result.success) {
     logInfo('[Playback] Successfully loaded:', primaryUrl);
-    if (isLive) onLiveChannelLoaded(primaryUrl, userAgent, request.headerFields); else onNonLiveLoaded();
     return { success: true, url: primaryUrl };
   }
 
@@ -282,7 +280,6 @@ async function tryLoadWithFallbacks(
     const fallbackResult = await Bridge.loadVideo(fallbackUrl, userAgent);
     if (fallbackResult.success) {
       logInfo('[Playback] Fallback succeeded:', fallbackUrl);
-      if (isLive) onLiveChannelLoaded(fallbackUrl, userAgent, request.headerFields); else onNonLiveLoaded();
       return { success: true, url: fallbackUrl };
     }
     logWarn('[Playback] Fallback failed:', fallbackUrl);
@@ -3018,8 +3015,7 @@ export function usePlayback(options: UsePlaybackOptions): PlaybackState {
           const startedFor = info.mediaId;
           let groqKey: string | null = null;
           try { groqKey = localStorage.getItem('groq-api-key'); } catch { /* ignore */ }
-          let localWhisper = true;
-          try { localWhisper = localStorage.getItem('youtube-local-whisper') !== 'off'; } catch { /* ignore */ }
+          const localWhisper = false;
           void invoke<string>('youtube_subtitles', { url: `https://www.youtube.com/watch?v=${ytId}`, groqKey, localWhisper })
             .then(async (subPath) => {
               if (vodInfoRef.current?.mediaId !== startedFor) return;

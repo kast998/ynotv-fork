@@ -2199,12 +2199,11 @@ async fn tencent_translate(text: &str) -> Result<String, String> {
     Ok(out.join("\n"))
 }
 
-/// Translate to Simplified Chinese: Tencent first (works in mainland China),
-/// then Google.
+/// Translate to Simplified Chinese: Google first, Tencent only if Google fails.
 async fn google_translate(client: &reqwest::Client, text: &str) -> Result<String, String> {
-    match tencent_translate(text).await {
+    match google_translate_raw(client, text).await {
         Ok(t) => Ok(t),
-        Err(_) => google_translate_raw(client, text).await,
+        Err(_) => tencent_translate(text).await,
     }
 }
 

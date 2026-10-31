@@ -3013,8 +3013,7 @@ export function usePlayback(options: UsePlaybackOptions): PlaybackState {
         if (zhOn) {
           const ytId = info.mediaId.slice('youtube:'.length);
           const startedFor = info.mediaId;
-          let groqKey: string | null = null;
-          try { groqKey = localStorage.getItem('groq-api-key'); } catch { /* ignore */ }
+          const groqKey: string | null = null;
           let localWhisper = true;
           try { localWhisper = localStorage.getItem('youtube-local-whisper') !== 'off'; } catch { /* ignore */ }
           void invoke<string>('youtube_subtitles', { url: `https://www.youtube.com/watch?v=${ytId}`, groqKey, localWhisper })

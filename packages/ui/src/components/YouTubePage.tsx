@@ -141,10 +141,7 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
   const [zhSubs, setZhSubs] = useState<boolean>(() => {
     try { return localStorage.getItem('youtube-zh-subs') !== 'off'; } catch { return true; }
   });
-  const [groqKey, setGroqKey] = useState<string>(() => {
-    try { return localStorage.getItem('groq-api-key') || ''; } catch { return ''; }
-  });
-  const [groqOpen, setGroqOpen] = useState(false);
+  useEffect(() => { try { localStorage.removeItem('groq-api-key'); } catch { /* ignore */ } }, []);
   const [localWhisper, setLocalWhisper] = useState<boolean>(() => {
     try { return localStorage.getItem('youtube-local-whisper') !== 'off'; } catch { return true; }
   });
@@ -152,13 +149,6 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     const next = !localWhisper;
     setLocalWhisper(next);
     try { localStorage.setItem('youtube-local-whisper', next ? 'on' : 'off'); } catch { /* ignore */ }
-  };
-  const saveGroqKey = (v: string) => {
-    setGroqKey(v);
-    try {
-      if (v.trim()) localStorage.setItem('groq-api-key', v.trim());
-      else localStorage.removeItem('groq-api-key');
-    } catch { /* ignore */ }
   };
   const toggleZhSubs = () => {
     const next = !zhSubs;
@@ -275,14 +265,6 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
         <button
           className="tvbox-btn"
           type="button"
-          onClick={() => setGroqOpen((o) => !o)}
-          title="没有字幕的视频，用 Groq Whisper 听语音生成中文字幕"
-        >
-          {groqKey ? 'Groq Key：已设置' : 'Groq Key'}
-        </button>
-        <button
-          className="tvbox-btn"
-          type="button"
           onClick={toggleLocalWhisper}
           style={localWhisper ? { background: '#e33', color: '#fff', borderColor: '#e33' } : undefined}
           title="没有字幕的视频，在本机用 Whisper 听语音生成中文字幕（首次会下载约 160MB）"
@@ -290,19 +272,6 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
           {localWhisper ? '本地语音识别：开' : '本地语音识别：关'}
         </button>
       </form>
-      {groqOpen && (
-        <div className="tvbox-hint" style={{ padding: '6px 2px', display: 'flex', gap: 8, alignItems: 'center' }}>
-          <input
-            className="tvbox-input"
-            type="password"
-            value={groqKey}
-            onChange={(e) => saveGroqKey(e.target.value)}
-            placeholder="粘贴 Groq API Key（gsk_ 开头），只保存在本机"
-            style={{ flex: 1 }}
-          />
-          <button className="tvbox-btn" type="button" onClick={() => setGroqOpen(false)}>完成</button>
-        </div>
-      )}
       {loginOpen && (
         <div className="tvbox-hint" style={{ padding: '6px 2px', opacity: 0.85 }}>
           在弹出的窗口里登录，看到 YouTube 首页后，回来点“保存登录”。

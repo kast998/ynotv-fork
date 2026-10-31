@@ -467,7 +467,7 @@ export function TrackSelectionModal({ isOpen, type, onClose, channel }: TrackSel
             <button
               className="track-modal-tab"
               onClick={() => { const next = !liveOn; setLiveOn(next); setLiveSubsEnabled(next); }}
-              title="电视直播：本地 Whisper 听语音翻成中文字幕（比画面晚约 20 秒）"
+              title="电视直播：本地 Whisper 听语音翻成中文字幕（比画面晚约 10 秒）"
               style={liveOn ? { background: '#e33', color: '#fff' } : undefined}
             >
               {liveOn ? '直播中文字幕：开' : '直播中文字幕：关'}

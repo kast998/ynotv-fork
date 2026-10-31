@@ -1783,7 +1783,7 @@ async fn live_subtitles_start(
         .arg("-f")
         .arg("segment")
         .arg("-segment_time")
-        .arg("12")
+        .arg("5")
         .arg("-reset_timestamps")
         .arg("1")
         .arg(dir.join("chunk_%05d.wav"))
@@ -1808,7 +1808,7 @@ async fn live_subtitles_start(
             let next = dir.join(format!("chunk_{:05}.wav", n + 1));
             if !next.exists() {
                 idle += 1;
-                if idle == 60 && n == 0 {
+                if idle == 40 && n == 0 {
                     let _ = app.emit(
                         "live-subtitle",
                         serde_json::json!({ "text": "直播字幕：拿不到这个频道的音频（可能频道只允许一个连接）", "status": true }),
@@ -1844,6 +1844,12 @@ async fn live_subtitles_start(
                 .arg(threads.to_string())
                 .arg("-np")
                 .arg("-nt")
+                .arg("-bs")
+                .arg("1")
+                .arg("-bo")
+                .arg("1")
+                .arg("-mc")
+                .arg("0")
                 .stderr(std::process::Stdio::null())
                 .kill_on_drop(true);
             #[cfg(target_os = "windows")]

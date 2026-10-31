@@ -14,7 +14,7 @@ export function LiveSubtitleOverlay() {
       setText(e.payload.text || '');
       setStatus(!!e.payload.status);
       if (timer.current) window.clearTimeout(timer.current);
-      timer.current = window.setTimeout(clear, e.payload.status ? 6000 : 14000);
+      timer.current = window.setTimeout(clear, e.payload.status ? 6000 : 8000);
     }).then((u) => { unlisten = u; });
     window.addEventListener('live-subtitle-clear', clear);
     return () => {

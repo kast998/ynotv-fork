@@ -2028,7 +2028,7 @@ async fn translate_cues_to_vtt(
     while i < lines.len() {
         let mut j = i;
         let mut len = 0;
-        while j < lines.len() && (j == i || len + lines[j].len() < 3500) && j - i < 80 {
+        while j < lines.len() && (j == i || len + lines[j].len() < 3000) && j - i < 50 {
             len += lines[j].len() + 1;
             j += 1;
         }
@@ -2160,7 +2160,49 @@ async fn youtube_subtitles_whisper(
     translate_cues_to_vtt(&client, &cues, &dir.join(format!("{id}.zh-Hans.vtt"))).await
 }
 
+/// Tencent TranSmart (no key, reachable in mainland China). Keeps line count.
+async fn tencent_translate(text: &str) -> Result<String, String> {
+    let lines: Vec<&str> = text.split('\n').collect();
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let body = serde_json::json!({
+        "header": { "fn": "auto_translation", "client_key": "browser-chrome-126.0.0-Windows_10-7c1f3e2a-ynotv-0000-000000000001" },
+        "type": "plain",
+        "model_category": "normal",
+        "source": { "lang": "auto", "text_list": lines },
+        "target": { "lang": "zh" }
+    });
+    let resp = client
+        .post("https://transmart.qq.com/api/imt")
+        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    let v: serde_json::Value = resp.json().await.map_err(|e| e.to_string())?;
+    let arr = v
+        .get("auto_translation")
+        .and_then(|a| a.as_array())
+        .ok_or_else(|| "腾讯翻译失败".to_string())?;
+    let out: Vec<String> = arr.iter().map(|x| x.as_str().unwrap_or("").to_string()).collect();
+    if out.len() != lines.len() || out.iter().all(|x| x.is_empty()) {
+        return Err("腾讯翻译结果不完整".into());
+    }
+    Ok(out.join("\n"))
+}
+
+/// Translate to Simplified Chinese: Tencent first (works in mainland China),
+/// then Google.
 async fn google_translate(client: &reqwest::Client, text: &str) -> Result<String, String> {
+    match tencent_translate(text).await {
+        Ok(t) => Ok(t),
+        Err(_) => google_translate_raw(client, text).await,
+    }
+}
+
+async fn google_translate_raw(client: &reqwest::Client, text: &str) -> Result<String, String> {
     let resp = client
         .post("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t")
         .form(&[("q", text)])

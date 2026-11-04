@@ -53,10 +53,23 @@ case "$OS" in
     # VulkanRT-License.txt copied alongside).
     echo "Downloading Vulkan runtime loader (vulkan-1.dll)..."
     VULKAN_RT_URL="https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-runtime-components.zip"
-    curl -fsSL -o "$TEMP_DIR/vulkan-runtime.zip" "$VULKAN_RT_URL"
-    7z e -r "$TEMP_DIR/vulkan-runtime.zip" -o"$TEMP_DIR/vulkan-extract" "*/x64/vulkan-1.dll" "VulkanRT-License.txt" -y
-    cp "$TEMP_DIR/vulkan-extract/vulkan-1.dll" "$TAURI_BIN_DIR/vulkan-1.dll"
-    cp "$TEMP_DIR/vulkan-extract/VulkanRT-License.txt" "$TAURI_BIN_DIR/VulkanRT-License.txt" 2>/dev/null || true
+    if curl -fsSL -o "$TEMP_DIR/vulkan-runtime.zip" "$VULKAN_RT_URL" \
+      && 7z e -r "$TEMP_DIR/vulkan-runtime.zip" -o"$TEMP_DIR/vulkan-extract" "*/x64/vulkan-1.dll" "VulkanRT-License.txt" -y \
+      && cp "$TEMP_DIR/vulkan-extract/vulkan-1.dll" "$TAURI_BIN_DIR/vulkan-1.dll"; then
+      cp "$TEMP_DIR/vulkan-extract/VulkanRT-License.txt" "$TAURI_BIN_DIR/VulkanRT-License.txt" 2>/dev/null || true
+    else
+      # LunarG link gone: take the same Khronos loader from MSYS2's package.
+      echo "LunarG runtime unavailable, using MSYS2 vulkan-loader instead"
+      VL_PKG=$(curl -fsSL https://repo.msys2.org/mingw/mingw64/ | grep -o 'mingw-w64-x86_64-vulkan-loader-[^"]*any\.pkg\.tar\.zst' | sort -uV | tail -1)
+      if [ -n "$VL_PKG" ] && curl -fsSL -o "$TEMP_DIR/vl.tar.zst" "https://repo.msys2.org/mingw/mingw64/$VL_PKG" \
+        && mkdir -p "$TEMP_DIR/vl" && (tar --zstd -xf "$TEMP_DIR/vl.tar.zst" -C "$TEMP_DIR/vl" 2>/dev/null || zstd -dc "$TEMP_DIR/vl.tar.zst" | tar -xf - -C "$TEMP_DIR/vl"); then
+        cp "$TEMP_DIR/vl/mingw64/bin/vulkan-1.dll" "$TAURI_BIN_DIR/vulkan-1.dll"
+      elif [ -f /c/Windows/System32/vulkan-1.dll ]; then
+        cp /c/Windows/System32/vulkan-1.dll "$TAURI_BIN_DIR/vulkan-1.dll"
+      else
+        echo "WARNING: could not bundle vulkan-1.dll"
+      fi
+    fi
     rm -rf "$TEMP_DIR"
 
     # Download latest yt-dlp explicitly (ensures it's named for Tauri externalBin)

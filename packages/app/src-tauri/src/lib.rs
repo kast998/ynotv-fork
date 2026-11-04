@@ -1225,6 +1225,110 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
     Ok(items)
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct YoutubeChannel {
+    pub id: String,
+    pub title: String,
+    pub url: String,
+    pub avatar: Option<String>,
+}
+
+fn collect_channel_renderers(v: &serde_json::Value, out: &mut Vec<YoutubeChannel>) {
+    match v {
+        serde_json::Value::Object(m) => {
+            for key in ["channelRenderer", "gridChannelRenderer"] {
+                if let Some(r) = m.get(key) {
+                    let id = r.get("channelId").and_then(|x| x.as_str()).unwrap_or("").to_string();
+                    if !id.is_empty() && !out.iter().any(|c| c.id == id) {
+                        let title = r.get("title").and_then(|t| {
+                            t.get("simpleText").and_then(|x| x.as_str()).map(|s| s.to_string()).or_else(|| {
+                                t.get("runs").and_then(|a| a.as_array()).map(|a| {
+                                    a.iter().filter_map(|x| x.get("text").and_then(|y| y.as_str())).collect::<String>()
+                                })
+                            })
+                        }).unwrap_or_else(|| id.clone());
+                        let path = r
+                            .pointer("/navigationEndpoint/browseEndpoint/canonicalBaseUrl")
+                            .and_then(|x| x.as_str())
+                            .map(|s| s.to_string())
+                            .unwrap_or_else(|| format!("/channel/{id}"));
+                        let avatar = r
+                            .pointer("/thumbnail/thumbnails")
+                            .and_then(|a| a.as_array())
+                            .and_then(|a| a.last())
+                            .and_then(|t| t.get("url"))
+                            .and_then(|u| u.as_str())
+                            .map(|u| if u.starts_with("//") { format!("https:{u}") } else { u.to_string() });
+                        out.push(YoutubeChannel { url: format!("https://www.youtube.com{path}"), title, avatar, id });
+                    }
+                }
+            }
+            for (_, x) in m {
+                collect_channel_renderers(x, out);
+            }
+        }
+        serde_json::Value::Array(a) => {
+            for x in a {
+                collect_channel_renderers(x, out);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// The signed-in user's subscribed channels (like the 订阅 list in YouTube's
+/// sidebar), read from youtube.com/feed/channels with the saved login.
+#[tauri::command]
+async fn youtube_subscriptions() -> Result<Vec<YoutubeChannel>, String> {
+    let file = youtube_cookie_file().filter(|f| f.exists()).ok_or_else(|| "NEEDLOGIN".to_string())?;
+    let text = std::fs::read_to_string(&file).map_err(|e| e.to_string())?;
+    let mut pairs: Vec<String> = Vec::new();
+    for line in text.lines() {
+        let line = line.strip_prefix("#HttpOnly_").unwrap_or(line);
+        if line.starts_with('#') || line.trim().is_empty() {
+            continue;
+        }
+        let f: Vec<&str> = line.split('\t').collect();
+        if f.len() >= 7 && f[0].trim_start_matches('.').ends_with("youtube.com") {
+            pairs.push(format!("{}={}", f[5], f[6]));
+        }
+    }
+    if pairs.is_empty() {
+        return Err("NEEDLOGIN".to_string());
+    }
+    let mut b = reqwest::Client::builder().timeout(std::time::Duration::from_secs(30));
+    let pa = youtube_proxy_args().await;
+    if pa.len() == 2 {
+        if let Ok(p) = reqwest::Proxy::all(&pa[1]) {
+            b = b.proxy(p);
+        }
+    }
+    let client = b.build().map_err(|e| e.to_string())?;
+    let html = client
+        .get("https://www.youtube.com/feed/channels?hl=zh-CN")
+        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0")
+        .header("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
+        .header("Cookie", pairs.join("; "))
+        .send()
+        .await
+        .map_err(|e| format!("读取订阅失败: {e}"))?
+        .text()
+        .await
+        .map_err(|e| e.to_string())?;
+    let start = html
+        .find("var ytInitialData = ")
+        .map(|i| i + "var ytInitialData = ".len())
+        .or_else(|| html.find("window[\"ytInitialData\"] = ").map(|i| i + "window[\"ytInitialData\"] = ".len()))
+        .ok_or_else(|| "NEEDLOGIN".to_string())?;
+    let rest = &html[start..];
+    let end = rest.find(";</script>").ok_or_else(|| "订阅页面格式变了".to_string())?;
+    let v: serde_json::Value = serde_json::from_str(&rest[..end]).map_err(|e| e.to_string())?;
+    let mut out = Vec::new();
+    collect_channel_renderers(&v, &mut out);
+    Ok(out)
+}
+
 /// Cookie sources tried, in order, when YouTube asks to "confirm you're not a bot".
 /// `cookies.txt` lives at %APPDATA%\\ynotv\\youtube-cookies.txt (or ~/.config/ynotv/).
 fn youtube_cookie_sources(pref: Option<String>) -> Vec<Vec<String>> {
@@ -7217,6 +7321,7 @@ pub fn run() {
             open_external_url,
             ytdlp_info,
             youtube_search,
+            youtube_subscriptions,
             youtube_resolve,
             youtube_subtitles,
             youtube_login_open,

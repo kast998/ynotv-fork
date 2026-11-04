@@ -22,6 +22,13 @@ interface YoutubeItem {
   isLive: boolean;
 }
 
+interface YoutubeChannel {
+  id: string;
+  title: string;
+  url: string;
+  avatar?: string | null;
+}
+
 interface YouTubePageProps {
   onPlay: (info: VodPlayInfo, targetMode?: VodPlayerMode) => void;
   onClose: () => void;
@@ -105,8 +112,42 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
   }, []);
 
   const [feed, setFeed] = useState<string | null>(null);
+  const [channels, setChannels] = useState<YoutubeChannel[] | null>(null);
+  const [channelsErr, setChannelsErr] = useState<string | null>(null);
+  const [channel, setChannel] = useState<YoutubeChannel | null>(null);
+  const loadChannels = useCallback(async () => {
+    setChannelsErr(null);
+    try {
+      const res = await invoke<YoutubeChannel[]>('youtube_subscriptions');
+      setChannels(res);
+      if (res.length === 0) setChannelsErr('没读到订阅的频道');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setChannels([]);
+      setChannelsErr(msg.includes('NEEDLOGIN') ? '需要先登录 YouTube' : msg);
+    }
+  }, []);
+  const openChannel = useCallback(async (c: YoutubeChannel) => {
+    setChannel(c);
+    setLoading(true);
+    setError(null);
+    setLastQuery(c.title);
+    try {
+      const res = await invoke<YoutubeItem[]>('youtube_search', { query: `${c.url.replace(/\/$/, '')}/videos`, limit: 48 });
+      setItems(res);
+      if (res.length === 0) setError('这个频道暂时没有视频');
+    } catch (e) {
+      setItems([]);
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(describeYtError(msg, '加载频道失败'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
   const loadFeed = useCallback(async (kind: string, quiet = false) => {
     setFeed(kind);
+    setChannel(null);
+    if (kind === ':ytsubs' && channels === null) void loadChannels();
     setLoading(true);
     setError(null);
     setLastQuery(FEEDS.find((f) => f.key === kind)?.label ?? kind);
@@ -125,8 +166,8 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
-  useEffect(() => { void loadFeed(':ytrec', true); }, [loadFeed]);
+  }, [channels, loadChannels]);
+  useEffect(() => { void loadFeed(':ytrec', true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [resolving, setResolving] = useState<string | null>(null);
   const [cookies, setCookies] = useState<string>(() => {
@@ -309,6 +350,33 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
         )}
       </div>
 
+      <div className={feed === ':ytsubs' ? 'youtube-subs-layout' : undefined}>
+      {feed === ':ytsubs' && (
+        <aside className="youtube-subs-side">
+          <button
+            className={`youtube-sub-item youtube-sub-head${channel ? '' : ' youtube-sub-item--active'}`}
+            onClick={() => void loadFeed(':ytsubs')}
+          >
+            订阅 · 最新视频
+          </button>
+          {channels === null && <div className="youtube-sub-note">正在读取订阅频道…</div>}
+          {channelsErr && <div className="youtube-sub-note">{channelsErr}</div>}
+          {(channels || []).map((c) => (
+            <button
+              key={c.id}
+              className={`youtube-sub-item${channel?.id === c.id ? ' youtube-sub-item--active' : ''}`}
+              onClick={() => void openChannel(c)}
+              title={c.title}
+            >
+              {c.avatar
+                ? <img className="youtube-sub-avatar" src={c.avatar} alt="" loading="lazy" referrerPolicy="no-referrer" />
+                : <span className="youtube-sub-avatar" />}
+              <span className="youtube-sub-name">{c.title}</span>
+            </button>
+          ))}
+        </aside>
+      )}
+      <div className="youtube-subs-main">
       {error && <div className="tvbox-error" style={{ whiteSpace: 'pre-wrap', userSelect: 'text' }}>{error}</div>}
       {loading && <div className="tvbox-loading">{feed ? `正在加载${lastQuery}…` : `正在用 yt-dlp 搜索「${lastQuery}」…`}</div>}
 
@@ -333,6 +401,8 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
         </div>
       )}
 
+      </div>
+      </div>
       {!loading && items.length === 0 && !error && (
         <div className="tvbox-hint">
           用内置 yt-dlp 搜索，点视频就用播放器打开（mpv 自动选最高画质）。国内网络需要系统代理。

@@ -1157,6 +1157,14 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
         .arg(n.to_string());
     // Personal feeds (:ytrec recommended, :ytsubs subscriptions, :ythis history)
     // need the saved login, through the same exit IP as the login window.
+    if q.contains("youtube.com/") && !q.starts_with(":yt") {
+        if let Some(f) = youtube_cookie_file().filter(|f| f.exists()) {
+            cmd.arg("--cookies").arg(f);
+        }
+        for p in youtube_proxy_args().await {
+            cmd.arg(p);
+        }
+    }
     if q.starts_with(":yt") {
         match youtube_cookie_file().filter(|f| f.exists()) {
             Some(f) => {
@@ -1281,6 +1289,73 @@ fn collect_channel_renderers(v: &serde_json::Value, out: &mut Vec<YoutubeChannel
 /// sidebar), read from youtube.com/feed/channels with the saved login.
 #[tauri::command]
 async fn youtube_subscriptions() -> Result<Vec<YoutubeChannel>, String> {
+    let direct = youtube_subscriptions_http().await;
+    match direct {
+        Ok(v) if !v.is_empty() => Ok(v),
+        Err(e) if e == "NEEDLOGIN" && youtube_cookie_file().filter(|f| f.exists()).is_none() => Err(e),
+        other => match youtube_subscriptions_ytdlp().await {
+            Ok(v) if !v.is_empty() => Ok(v),
+            Ok(v) => other.or(Ok(v)),
+            Err(e2) => match other {
+                Ok(v) => Ok(v),
+                Err(e1) => Err(format!("{e1}；{e2}")),
+            },
+        },
+    }
+}
+
+/// Fallback: let yt-dlp (which already reaches YouTube for the feeds) read the
+/// channels page with the saved login.
+async fn youtube_subscriptions_ytdlp() -> Result<Vec<YoutubeChannel>, String> {
+    let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
+    let file = youtube_cookie_file().filter(|f| f.exists()).ok_or_else(|| "NEEDLOGIN".to_string())?;
+    let mut cmd = tokio::process::Command::new(ytdl);
+    cmd.arg("--flat-playlist").arg("-J").arg("--no-warnings").arg("--cookies").arg(file);
+    for p in youtube_proxy_args().await {
+        cmd.arg(p);
+    }
+    cmd.arg("https://www.youtube.com/feed/channels");
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(0x08000000);
+    }
+    let out = tokio::time::timeout(std::time::Duration::from_secs(90), cmd.output())
+        .await
+        .map_err(|_| "读取订阅超时".to_string())?
+        .map_err(|e| e.to_string())?;
+    if !out.status.success() {
+        let err = String::from_utf8_lossy(&out.stderr);
+        return Err(err.lines().last().unwrap_or("yt-dlp failed").to_string());
+    }
+    let v: serde_json::Value = serde_json::from_slice(&out.stdout).map_err(|e| e.to_string())?;
+    let mut res = Vec::new();
+    for e in v.get("entries").and_then(|x| x.as_array()).cloned().unwrap_or_default() {
+        let url = e.get("url").and_then(|x| x.as_str()).unwrap_or("").to_string();
+        let id = e.get("channel_id").or_else(|| e.get("id")).and_then(|x| x.as_str()).unwrap_or("").to_string();
+        if url.is_empty() && id.is_empty() {
+            continue;
+        }
+        let url = if url.starts_with("http") { url } else { format!("https://www.youtube.com/channel/{id}") };
+        let title = e
+            .get("title")
+            .or_else(|| e.get("channel"))
+            .or_else(|| e.get("uploader"))
+            .and_then(|x| x.as_str())
+            .unwrap_or("")
+            .to_string();
+        let avatar = e
+            .get("thumbnails")
+            .and_then(|t| t.as_array())
+            .and_then(|a| a.last())
+            .and_then(|t| t.get("url"))
+            .and_then(|x| x.as_str())
+            .map(|u| if u.starts_with("//") { format!("https:{u}") } else { u.to_string() });
+        res.push(YoutubeChannel { id, title, url, avatar });
+    }
+    Ok(res)
+}
+
+async fn youtube_subscriptions_http() -> Result<Vec<YoutubeChannel>, String> {
     let file = youtube_cookie_file().filter(|f| f.exists()).ok_or_else(|| "NEEDLOGIN".to_string())?;
     let text = std::fs::read_to_string(&file).map_err(|e| e.to_string())?;
     let mut pairs: Vec<String> = Vec::new();
@@ -1312,7 +1387,7 @@ async fn youtube_subscriptions() -> Result<Vec<YoutubeChannel>, String> {
         .header("Cookie", pairs.join("; "))
         .send()
         .await
-        .map_err(|e| format!("读取订阅失败: {e}"))?
+        .map_err(|e| { use std::error::Error as _; let mut m = format!("读取订阅失败: {e}"); let mut src = e.source(); while let Some(c) = src { m.push_str(&format!(" / {c}")); src = c.source(); } m })?
         .text()
         .await
         .map_err(|e| e.to_string())?;

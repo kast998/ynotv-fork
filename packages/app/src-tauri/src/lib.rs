@@ -1139,7 +1139,7 @@ pub struct YoutubeItem {
 #[tauri::command]
 async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<YoutubeItem>, String> {
     let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
-    let n = limit.unwrap_or(30).clamp(1, 100);
+    let n = limit.unwrap_or(30).clamp(1, 2000);
     let q = query.trim();
     if q.is_empty() {
         return Ok(vec![]);
@@ -1173,7 +1173,7 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
     {
         cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
     }
-    let out = tokio::time::timeout(std::time::Duration::from_secs(45), cmd.output())
+    let out = tokio::time::timeout(std::time::Duration::from_secs(if n > 100 { 120 } else { 45 }), cmd.output())
         .await
         .map_err(|_| "YouTube search timed out".to_string())?
         .map_err(|e| e.to_string())?;

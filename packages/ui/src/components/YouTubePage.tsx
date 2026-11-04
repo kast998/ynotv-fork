@@ -133,7 +133,7 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     setError(null);
     setLastQuery(c.title);
     try {
-      const res = await invoke<YoutubeItem[]>('youtube_search', { query: `${c.url.replace(/\/$/, '')}/videos`, limit: 48 });
+      const res = await invoke<YoutubeItem[]>('youtube_search', { query: `${c.url.replace(/\/$/, '')}/videos`, limit: 2000 });
       setItems(res);
       if (res.length === 0) setError('这个频道暂时没有视频');
     } catch (e) {
@@ -152,7 +152,7 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     setError(null);
     setLastQuery(FEEDS.find((f) => f.key === kind)?.label ?? kind);
     try {
-      const res = await invoke<YoutubeItem[]>('youtube_search', { query: kind, limit: 48 });
+      const res = await invoke<YoutubeItem[]>('youtube_search', { query: kind, limit: kind === ':ytsubs' ? 300 : 100 });
       setItems(res);
       if (res.length === 0 && !quiet) setError('这里暂时没有内容');
     } catch (e) {

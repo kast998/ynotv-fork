@@ -70,6 +70,9 @@ case "$OS" in
         echo "WARNING: could not bundle vulkan-1.dll"
       fi
     fi
+    if [ ! -f "$TAURI_BIN_DIR/VulkanRT-License.txt" ]; then
+      printf '%s\n' "vulkan-1.dll: Khronos Vulkan Loader (https://github.com/KhronosGroup/Vulkan-Loader)" "Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0" > "$TAURI_BIN_DIR/VulkanRT-License.txt"
+    fi
     rm -rf "$TEMP_DIR"
 
     # Download latest yt-dlp explicitly (ensures it's named for Tauri externalBin)

@@ -30,6 +30,8 @@ export interface TvboxSite {
   ext?: string;
   /** Which config URL this site came from (for management UI). */
   configUrl: string;
+  /** TVBox `searchable`: 0 means the site does not support search. */
+  searchable?: number;
 }
 
 /** A live (直播) entry from a TVBox JSON config `lives[]`. */
@@ -241,6 +243,7 @@ export async function fetchTvboxConfigFull(url: string): Promise<TvboxConfig> {
       api: String(s.api ?? ''),
       ext: extToString(s.ext),
       configUrl: url,
+      searchable: s.searchable === undefined ? undefined : Number(s.searchable),
     }));
   const lives: TvboxLive[] = rawLives
     .filter((l: any) => l && typeof l.url === 'string' && /^https?:\/\//i.test(l.url))

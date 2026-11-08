@@ -35,9 +35,10 @@ type Screen =
   | { name: 'sites' }
   | { name: 'home'; site: TvboxSite }
   | { name: 'category'; site: TvboxSite; cat: TvboxCategory; page: number }
-  | { name: 'detail'; site: TvboxSite; video: TvboxVideo }
+  | { name: 'detail'; site: TvboxSite; video: TvboxVideo; from?: Screen }
   | { name: 'search'; site: TvboxSite; query: string }
-  | { name: 'history' };
+  | { name: 'history' }
+  | { name: 'globalSearch'; query: string };
 
 // ---- watch history (localStorage) ------------------------------------------
 interface TvboxHistoryEntry {
@@ -243,7 +244,7 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
         <button className="tvbox-back" onClick={onClose} aria-label="返回">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
         </button>
-        <h1 className="tvbox-title">TVBox</h1><span style={{fontSize:"10px",opacity:0.5,marginLeft:"6px"}}>t13</span>
+        <h1 className="tvbox-title">TVBox</h1><span style={{fontSize:"10px",opacity:0.5,marginLeft:"6px"}}>t14</span>
         <div
           className={`tvbox-status tvbox-status--${sidecarState}`}
           title={sidecarState === 'online' ? `爬虫服务正常 (${spiderClasses.length} 个)` : sidecarState === 'offline' ? `无法连接 ${SIDECAR_BASE}` : '检查中'}
@@ -325,12 +326,23 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
 
       {sitesError && <div className="tvbox-error">{sitesError}</div>}
 
+      {screen.name === 'globalSearch' && (
+        <GlobalSearchView
+          key={`gs:${screen.query}`}
+          query={screen.query}
+          sites={compatibleSites}
+          spiderSet={spiderSet}
+          onBack={() => setScreen({ name: 'sites' })}
+          onSearch={(query) => setScreen({ name: 'globalSearch', query })}
+          onOpenVideo={(site, video) => setScreen({ name: 'detail', site, video, from: screen })}
+        />
+      )}
       {screen.name === 'history' && (
         <HistoryView
           sites={sites}
           loading={sitesLoading}
           onBack={() => setScreen({ name: 'sites' })}
-          onOpen={(site, video) => setScreen({ name: 'detail', site, video })}
+          onOpen={(site, video) => setScreen({ name: 'detail', site, video, from: screen })}
         />
       )}
       {screen.name === 'sites' && (
@@ -339,6 +351,7 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
           compatible={compatibleSites}
           incompatible={incompatibleSites}
           onSelect={(site) => setScreen({ name: 'home', site })}
+          onSearch={(query) => setScreen({ name: 'globalSearch', query })}
         />
       )}
       {screen.name === 'home' && (
@@ -369,7 +382,7 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
           site={screen.site}
           spiderClass={resolveSpider(screen.site, spiderSet) ?? ''}
           video={screen.video}
-          onBack={() => setScreen({ name: 'home', site: screen.site })}
+          onBack={() => setScreen(screen.from ?? { name: 'home', site: screen.site })}
           onPlay={onPlay}
         />
       )}
@@ -389,12 +402,14 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
 
 // ---------------------------------------------------------------------------
 
-function SiteList({ loading, compatible, incompatible, onSelect }: {
+function SiteList({ loading, compatible, incompatible, onSelect, onSearch }: {
   loading: boolean;
   compatible: TvboxSite[];
   incompatible: TvboxSite[];
   onSelect: (s: TvboxSite) => void;
+  onSearch: (q: string) => void;
 }) {
+  const [q, setQ] = useState('');
   if (loading) return <div className="tvbox-loading">加载站点中…</div>;
   if (compatible.length === 0 && incompatible.length === 0) {
     return <div className="tvbox-empty">暂无站点。点右上角「管理站点」添加 TVBox 配置地址。</div>;
@@ -403,7 +418,21 @@ function SiteList({ loading, compatible, incompatible, onSelect }: {
     <div className="tvbox-sites">
       {compatible.length > 0 && (
         <>
-          <h2 className="tvbox-section-title">可用站点（{compatible.length}）</h2>
+          <div className="tvbox-subheader">
+            <h2 className="tvbox-section-title">可用站点（{compatible.length}）</h2>
+            <form
+              className="tvbox-search-form"
+              onSubmit={(e) => { e.preventDefault(); if (q.trim()) onSearch(q.trim()); }}
+            >
+              <input
+                className="tvbox-input"
+                style={{ width: 300 }}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="搜索所有站点，回车…"
+              />
+            </form>
+          </div>
           <div className="tvbox-grid">
             {compatible.map((s) => (
               <button key={`${s.configUrl}::${s.key}`} className="tvbox-card" onClick={() => onSelect(s)}>
@@ -817,6 +846,100 @@ function HistoryView({ sites, loading, onBack, onOpen }: {
             >✕</button>
           </div>
         ))}</div>}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+interface GsResult { site: TvboxSite; videos: TvboxVideo[] }
+const gsCache = new Map<string, { results: GsResult[]; done: number }>();
+
+function GlobalSearchView({ query, sites, spiderSet, onBack, onSearch, onOpenVideo }: {
+  query: string;
+  sites: TvboxSite[];
+  spiderSet: Set<string>;
+  onBack: () => void;
+  onSearch: (q: string) => void;
+  onOpenVideo: (site: TvboxSite, v: TvboxVideo) => void;
+}) {
+  const targets = useMemo(() => sites.filter((s) => s.searchable !== 0), [sites]);
+  const [results, setResults] = useState<GsResult[]>([]);
+  const [done, setDone] = useState(0);
+  const [q, setQ] = useState(query);
+
+  useEffect(() => {
+    let alive = true;
+    const cached = gsCache.get(query);
+    if (cached && cached.done >= targets.length) {
+      setResults(cached.results);
+      setDone(cached.done);
+      return () => { alive = false; };
+    }
+    gsCache.clear();
+    const acc: GsResult[] = [];
+    let finished = 0;
+    setResults([]);
+    setDone(0);
+    const queue = [...targets];
+    const searchOne = async (site: TvboxSite): Promise<TvboxVideo[]> => {
+      const work = site.type === 1
+        ? type1Search(site.api, query).then((r) => r.videos)
+        : invokeSpider(resolveSpider(site, spiderSet) ?? '', 'searchContent', [query, false], site.ext)
+          .then((d) => normalizeVideoList(d).videos);
+      const timeout = new Promise<TvboxVideo[]>((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000));
+      return Promise.race([work, timeout]);
+    };
+    const worker = async () => {
+      while (alive && queue.length > 0) {
+        const site = queue.shift()!;
+        try {
+          const videos = await searchOne(site);
+          if (alive && videos.length > 0) {
+            acc.push({ site, videos });
+            setResults([...acc]);
+          }
+        } catch { /* skip failing site */ }
+        if (alive) {
+          finished += 1;
+          setDone(finished);
+          gsCache.set(query, { results: [...acc], done: finished });
+        }
+      }
+    };
+    void Promise.all(Array.from({ length: 8 }, worker));
+    return () => { alive = false; };
+  }, [query, targets, spiderSet]);
+
+  const total = targets.length;
+  const count = results.reduce((n, r) => n + r.videos.length, 0);
+  return (
+    <div>
+      <div className="tvbox-subheader">
+        <button className="tvbox-btn" onClick={onBack}>‹ 站点</button>
+        <h2 className="tvbox-section-title">
+          搜索：{query}　{done < total ? `正在搜 ${done}/${total} 个站点…` : `搜完 ${total} 个站点`}，{count} 个结果
+        </h2>
+        <form
+          className="tvbox-search-form"
+          onSubmit={(e) => { e.preventDefault(); if (q.trim() && q.trim() !== query) onSearch(q.trim()); }}
+        >
+          <input className="tvbox-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="换个词搜…" />
+        </form>
+      </div>
+      {results.length === 0 && (
+        <div className="tvbox-empty">{done < total ? '搜索中…' : '所有站点都没搜到'}</div>
+      )}
+      {results.map((r) => (
+        <section key={`${r.site.configUrl}::${r.site.key}`}>
+          <h3 className="tvbox-section-title">{r.site.name}（{r.videos.length}）</h3>
+          <div className="tvbox-video-grid">
+            {r.videos.map((v) => (
+              <VideoCard key={v.vod_id || v.vod_name} v={v} onOpen={() => onOpenVideo(r.site, v)} />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

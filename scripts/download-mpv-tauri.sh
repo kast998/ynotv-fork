@@ -19,20 +19,26 @@ case "$OS" in
     echo "Downloading mpv for Windows (Tauri Sidecar)..."
     TARGET="x86_64-pc-windows-msvc"
     
-    # Fetch latest release download URL (shinchiro builds)
-    MPV_URL=$(curl -s https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest \
-      | grep "browser_download_url.*mpv-x86_64.*.7z" \
-      | head -n 1 \
+    # Fetch recent shinchiro builds; a just-published release can have assets
+    # that 404 for a while, so fall back to older releases until one downloads.
+    TEMP_DIR=$(mktemp -d)
+    MPV_URLS=$(curl -s "https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases?per_page=6" \
+      | grep -o '"browser_download_url": *"[^"]*mpv-x86_64-[0-9][^"]*\.7z"' \
       | cut -d '"' -f 4)
-    
-    if [ -z "$MPV_URL" ]; then
-      echo "Failed to find MPV download URL from GitHub API"
+    OK=""
+    for MPV_URL in $MPV_URLS; do
+      echo "URL: $MPV_URL"
+      rm -f "$TEMP_DIR/mpv.7z"
+      if curl -fL --retry 3 -o "$TEMP_DIR/mpv.7z" "$MPV_URL" && [ "$(wc -c < "$TEMP_DIR/mpv.7z")" -gt 1000000 ]; then
+        OK=1
+        break
+      fi
+      echo "Download failed, trying an older build..."
+    done
+    if [ -z "$OK" ]; then
+      echo "Failed to download MPV from any recent release"
       exit 1
     fi
-    
-    echo "URL: $MPV_URL"
-    TEMP_DIR=$(mktemp -d)
-    curl -L -o "$TEMP_DIR/mpv.7z" "$MPV_URL"
 
     # Extract
     7z x "$TEMP_DIR/mpv.7z" -o"$TEMP_DIR/mpv-extract" -y

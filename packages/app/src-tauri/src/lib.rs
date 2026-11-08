@@ -1679,7 +1679,7 @@ async fn youtube_subtitles(app: tauri::AppHandle, url: String, groq_key: Option<
         best.map(|(_, p)| p)
     };
     if let Some(p) = find(&dir) {
-        return Ok(p);
+        return Ok(clean_rolling_vtt(p));
     }
     let js = youtube_js_runtime_args().await;
     let mut cmd = tokio::process::Command::new(&ytdl);
@@ -1717,7 +1717,7 @@ async fn youtube_subtitles(app: tauri::AppHandle, url: String, groq_key: Option<
         .map_err(|_| "字幕下载超时".to_string())?
         .map_err(|e| e.to_string())?;
     if let Some(p) = find(&dir) {
-        return Ok(p);
+        return Ok(clean_rolling_vtt(p));
     }
     // Fallback (e.g. YouTube rate-limits its auto-translated track with 429):
     // fetch the original-language subtitles and translate them ourselves.
@@ -2413,6 +2413,40 @@ async fn google_translate_raw(client: &reqwest::Client, text: &str) -> Result<St
 
 /// Parse a WebVTT file into (start, end, text) cues, cleaning YouTube's
 /// rolling auto-caption format (inline timing tags, repeated lines).
+/// YouTube auto-captions (and their auto-translated tracks) are "rolling":
+/// every cue repeats the previous line above the new one, so the player shows
+/// each sentence twice. Rewrite such a file once so each cue holds only its
+/// new text.
+fn clean_rolling_vtt(path: String) -> String {
+    const MARK: &str = "NOTE ynotv-clean";
+    let Ok(text) = std::fs::read_to_string(&path) else { return path };
+    if text.contains(MARK) {
+        return path;
+    }
+    let cues = parse_vtt_cues(&text);
+    if cues.is_empty() {
+        return path;
+    }
+    let secs = |t: &str| -> f64 {
+        t.replace(',', ".").split(':').filter_map(|x| x.parse::<f64>().ok()).fold(0.0, |acc, x| acc * 60.0 + x)
+    };
+    let mut vtt = format!("WEBVTT\n\n{MARK}\n\n");
+    for (k, (start, end, t)) in cues.iter().enumerate() {
+        // Keep a line on screen until the next one starts (short gaps only),
+        // so it doesn't flash off too early.
+        let mut end = end.clone();
+        if let Some(next) = cues.get(k + 1) {
+            let gap = secs(&next.0) - secs(&end);
+            if gap > 0.0 && gap < 2.0 {
+                end = next.0.clone();
+            }
+        }
+        vtt.push_str(&format!("{start} --> {end}\n{t}\n\n"));
+    }
+    let _ = std::fs::write(&path, vtt);
+    path
+}
+
 fn parse_vtt_cues(text: &str) -> Vec<(String, String, String)> {
     let tag = regex::Regex::new(r"<[^>]*>").unwrap();
     let secs = |t: &str| -> f64 {

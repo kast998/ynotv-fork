@@ -22,9 +22,13 @@ case "$OS" in
     # Fetch recent shinchiro builds; a just-published release can have assets
     # that 404 for a while, so fall back to older releases until one downloads.
     TEMP_DIR=$(mktemp -d)
-    MPV_URLS=$(curl -s "https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases?per_page=6" \
+    AUTH=()
+    [ -n "${GH_API_TOKEN:-}" ] && AUTH=(-H "Authorization: Bearer $GH_API_TOKEN")
+    MPV_URLS=$(curl -s "${AUTH[@]}" "https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases?per_page=6" \
       | grep -o '"browser_download_url": *"[^"]*mpv-x86_64-[0-9][^"]*\.7z"' \
       | cut -d '"' -f 4)
+    # Known-good build as a last resort (API rate limit / outage).
+    MPV_URLS="$MPV_URLS https://github.com/shinchiro/mpv-winbuild-cmake/releases/download/20261107/mpv-x86_64-20261107-git-9028187538.7z"
     OK=""
     for MPV_URL in $MPV_URLS; do
       echo "URL: $MPV_URL"

@@ -1919,7 +1919,7 @@ async fn live_subtitles_start(
     use std::sync::atomic::Ordering;
     live_subtitles_stop_inner();
     let gen = LIVE_SUB_GEN.load(Ordering::SeqCst);
-    let _ = app.emit("live-subtitle", serde_json::json!({ "text": "直播字幕准备中…", "status": true }));
+    let _ = app.emit("live-subtitle", serde_json::json!({ "text": "直播中文字幕准备中…（自动识别语言，字幕比声音慢约 5–10 秒）", "status": true }));
     let (exe, model) = match ensure_local_whisper().await {
         Ok(v) => v,
         Err(e) => {
@@ -2054,7 +2054,13 @@ async fn live_subtitles_start(
             if text.chars().filter(|c| c.is_alphanumeric()).count() < 2 {
                 continue;
             }
-            let zh = google_translate(&client, &text).await.unwrap_or(text);
+            // Whisper's own --translate only outputs English, so recognise in the
+            // spoken language (auto-detected) and translate to Chinese separately.
+            // Tencent first: it is reachable without a proxy and answers fast.
+            let zh = match tencent_translate(&text).await {
+                Ok(t) if !t.trim().is_empty() => t,
+                _ => google_translate_raw(&client, &text).await.unwrap_or(text),
+            };
             if LIVE_SUB_GEN.load(Ordering::SeqCst) != gen {
                 break;
             }

@@ -28,6 +28,7 @@ import { useModal } from './components/Modal';
 import { NowPlayingBar } from './components/NowPlayingBar';
 import { PiPMediaBar } from './components/PiPMediaBar';
 import { ChannelInfoOverlay } from './components/ChannelInfoOverlay';
+import { LiveSubtitleOverlay } from './components/LiveSubtitleOverlay';
 import { TrackSelectionModal } from './components/TrackSelectionModal';
 import { DashQualityModal } from './components/DashQualityModal';
 import { SubtitleControlModal } from './components/SubtitleControlModal';
@@ -6745,6 +6746,8 @@ function useTmdbPresencePoster(
           />
         </>
       )}
+
+      <LiveSubtitleOverlay />
 
       {/* Channel Info Overlay */}
       <ChannelInfoOverlay

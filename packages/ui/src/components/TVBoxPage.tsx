@@ -36,7 +36,51 @@ type Screen =
   | { name: 'home'; site: TvboxSite }
   | { name: 'category'; site: TvboxSite; cat: TvboxCategory; page: number }
   | { name: 'detail'; site: TvboxSite; video: TvboxVideo }
-  | { name: 'search'; site: TvboxSite; query: string };
+  | { name: 'search'; site: TvboxSite; query: string }
+  | { name: 'history' };
+
+// ---- watch history (localStorage) ------------------------------------------
+interface TvboxHistoryEntry {
+  siteKey: string;
+  configUrl: string;
+  siteName: string;
+  vod_id: string;
+  vod_name: string;
+  vod_pic?: string;
+  epIdx: number;
+  epName: string;
+  at: number;
+}
+const HISTORY_KEY = 'tvbox-watch-history';
+function loadHistory(): TvboxHistoryEntry[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+function saveHistory(list: TvboxHistoryEntry[]) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 300))); } catch { /* ignore */ }
+}
+function recordHistory(e: TvboxHistoryEntry) {
+  const list = loadHistory().filter((h) => !(h.siteKey === e.siteKey && h.configUrl === e.configUrl && h.vod_id === e.vod_id));
+  saveHistory([e, ...list]);
+}
+function findHistory(site: TvboxSite, vodId: string): TvboxHistoryEntry | undefined {
+  return loadHistory().find((h) => h.siteKey === site.key && h.configUrl === site.configUrl && h.vod_id === vodId);
+}
+function fmtAgo(t: number): string {
+  const d = Date.now() - t;
+  const m = Math.floor(d / 60000);
+  if (m < 1) return '刚刚';
+  if (m < 60) return `${m} 分钟前`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} 小时前`;
+  const days = Math.floor(h / 24);
+  if (days < 30) return `${days} 天前`;
+  return new Date(t).toLocaleDateString();
+}
 
 /** Resolve which spider class (if any) backs a site, given the sidecar's list. */
 function resolveSpider(site: TvboxSite, available: Set<string>): string | null {
@@ -199,7 +243,7 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
         <button className="tvbox-back" onClick={onClose} aria-label="返回">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
         </button>
-        <h1 className="tvbox-title">TVBox</h1><span style={{fontSize:"10px",opacity:0.5,marginLeft:"6px"}}>t12</span>
+        <h1 className="tvbox-title">TVBox</h1><span style={{fontSize:"10px",opacity:0.5,marginLeft:"6px"}}>t13</span>
         <div
           className={`tvbox-status tvbox-status--${sidecarState}`}
           title={sidecarState === 'online' ? `爬虫服务正常 (${spiderClasses.length} 个)` : sidecarState === 'offline' ? `无法连接 ${SIDECAR_BASE}` : '检查中'}
@@ -214,6 +258,14 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
         </div>
         <button
           className="tvbox-manage-btn"
+          style={{ marginLeft: 'auto', marginRight: 8 }}
+          onClick={() => setScreen({ name: 'history' })}
+        >
+          观看历史
+        </button>
+        <button
+          className="tvbox-manage-btn"
+          style={{ marginLeft: 0 }}
           onClick={() => setShowManager((v) => !v)}
         >
           管理站点
@@ -273,6 +325,14 @@ export function TVBoxPage({ onPlay, onClose }: TVBoxPageProps) {
 
       {sitesError && <div className="tvbox-error">{sitesError}</div>}
 
+      {screen.name === 'history' && (
+        <HistoryView
+          sites={sites}
+          loading={sitesLoading}
+          onBack={() => setScreen({ name: 'sites' })}
+          onOpen={(site, video) => setScreen({ name: 'detail', site, video })}
+        />
+      )}
       {screen.name === 'sites' && (
         <SiteList
           loading={sitesLoading}
@@ -524,6 +584,7 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
+  const [lastIdx, setLastIdx] = useState<number | null>(() => findHistory(site, video.vod_id)?.epIdx ?? null);
 
   useEffect(() => {
     let alive = true;
@@ -578,6 +639,18 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
         (info as any).httpHeaders = headers;
       }
       onPlay(info);
+      recordHistory({
+        siteKey: site.key,
+        configUrl: site.configUrl,
+        siteName: site.name,
+        vod_id: video.vod_id,
+        vod_name: detail.vod_name || video.vod_name,
+        vod_pic: detail.vod_pic || video.vod_pic,
+        epIdx: idx,
+        epName: ep.name,
+        at: Date.now(),
+      });
+      setLastIdx(idx);
     } catch (e) {
       setError(`播放解析失败: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -601,6 +674,16 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
           <div className="tvbox-detail-body">
             <h3>{detail.vod_name}</h3>
             {detail.vod_remarks && <p className="tvbox-detail-remarks">{detail.vod_remarks}</p>}
+            {lastIdx !== null && detail.episodes[lastIdx] && (
+              <button
+                className="tvbox-btn"
+                style={{ margin: '6px 0 10px' }}
+                disabled={playingIdx !== null}
+                onClick={() => void playEpisode(lastIdx)}
+              >
+                ▶ 继续看 {detail.episodes[lastIdx].name}
+              </button>
+            )}
             <h4 className="tvbox-section-title">选集（{detail.episodes.length}）</h4>
             {detail.episodes.length === 0
               ? <div className="tvbox-empty">没有可播放的剧集</div>
@@ -609,6 +692,8 @@ function DetailView({ site, spiderClass, video, onBack, onPlay }: {
                   <button
                     key={`${ep.name}-${i}`}
                     className="tvbox-episode-btn"
+                    style={i === lastIdx ? { outline: '2px solid #3b82f6', outlineOffset: -2 } : undefined}
+                    title={i === lastIdx ? '上次看到这里' : undefined}
                     disabled={playingIdx !== null}
                     onClick={() => void playEpisode(i)}
                   >
@@ -669,6 +754,69 @@ function SearchView({ site, spiderClass, query, onBack, onOpenVideo }: {
             <VideoCard key={v.vod_id || v.vod_name} v={v} onOpen={() => onOpenVideo(v)} />
           ))}</div>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+
+function HistoryView({ sites, loading, onBack, onOpen }: {
+  sites: TvboxSite[];
+  loading: boolean;
+  onBack: () => void;
+  onOpen: (site: TvboxSite, video: TvboxVideo) => void;
+}) {
+  const [list, setList] = useState<TvboxHistoryEntry[]>(() => loadHistory());
+  const [msg, setMsg] = useState<string | null>(null);
+  const remove = (h: TvboxHistoryEntry) => {
+    const next = list.filter((x) => x !== h);
+    setList(next);
+    saveHistory(next);
+  };
+  const clear = () => {
+    if (!window.confirm('清空全部观看历史？')) return;
+    setList([]);
+    saveHistory([]);
+  };
+  const open = (h: TvboxHistoryEntry) => {
+    const site = sites.find((s) => s.key === h.siteKey && s.configUrl === h.configUrl)
+      ?? sites.find((s) => s.key === h.siteKey);
+    if (!site) {
+      setMsg(loading ? '站点还在加载，稍等再点' : `找不到站点「${h.siteName}」，可能配置已删除`);
+      return;
+    }
+    onOpen(site, { vod_id: h.vod_id, vod_name: h.vod_name, vod_pic: h.vod_pic } as TvboxVideo);
+  };
+  return (
+    <div>
+      <div className="tvbox-subheader">
+        <button className="tvbox-btn" onClick={onBack}>‹ 站点</button>
+        <h2 className="tvbox-section-title">观看历史（{list.length}）</h2>
+        {list.length > 0 && (
+          <button className="tvbox-btn tvbox-btn--danger" style={{ marginLeft: 'auto' }} onClick={clear}>清空</button>
+        )}
+      </div>
+      {msg && <div className="tvbox-error">{msg}</div>}
+      {list.length === 0
+        ? <div className="tvbox-empty">还没有观看记录。播放任意一集后会自动记在这里。</div>
+        : <div className="tvbox-video-grid">{list.map((h) => (
+          <div key={`${h.configUrl}::${h.siteKey}::${h.vod_id}`} style={{ position: 'relative' }}>
+            <button className="tvbox-video-card" onClick={() => open(h)}>
+              {h.vod_pic
+                ? <img className="tvbox-poster" src={h.vod_pic} alt="" loading="lazy" referrerPolicy="no-referrer" />
+                : <div className="tvbox-poster tvbox-poster--empty">无图</div>}
+              <div className="tvbox-video-name" title={h.vod_name}>{h.vod_name}</div>
+              <div className="tvbox-video-remarks">看到 {h.epName} · {fmtAgo(h.at)}</div>
+              <div className="tvbox-video-remarks" style={{ opacity: 0.6 }}>{h.siteName}</div>
+            </button>
+            <button
+              className="tvbox-btn"
+              title="删除这条记录"
+              style={{ position: 'absolute', top: 4, right: 4, padding: '2px 8px', minWidth: 0 }}
+              onClick={() => remove(h)}
+            >✕</button>
+          </div>
+        ))}</div>}
     </div>
   );
 }

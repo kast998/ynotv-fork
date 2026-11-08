@@ -154,7 +154,7 @@ function downloadFile(url, dest, callback) {
 
     https.get(url, (response) => {
         // Handle redirects
-        if (response.statusCode === 301 || response.statusCode === 302) {
+        if ([301, 302, 303, 307, 308].includes(response.statusCode)) {
             const redirectUrl = response.headers.location;
             console.log('[FFmpeg Downloader] Following redirect...');
             file.close();
@@ -165,6 +165,13 @@ function downloadFile(url, dest, callback) {
 
         if (response.statusCode !== 200) {
             file.close();
+            if (fallbackUrls.length > 0) {
+                const next = fallbackUrls.shift();
+                console.warn('[FFmpeg Downloader] Status', response.statusCode, '- trying mirror:', next);
+                try { fs.unlinkSync(dest); } catch {}
+                downloadFile(next, dest, callback);
+                return;
+            }
             console.error('[FFmpeg Downloader] ❌ Download failed with status:', response.statusCode);
             process.exit(1);
             return;
@@ -201,6 +208,9 @@ function downloadFile(url, dest, callback) {
     });
 }
 
+const fallbackUrls = platform === 'win32'
+    ? ['https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip']
+    : [];
 downloadFile(config.url, downloadPath, extractFFmpeg);
 
 function extractFFmpeg() {
@@ -234,7 +244,7 @@ function extractWindows() {
 
         // Find extracted ffmpeg directory
         const files = fs.readdirSync(extractDir);
-        const ffmpegDir = files.find(f => f.startsWith('ffmpeg-master') && f.includes('win64'));
+        const ffmpegDir = files.find(f => f.startsWith('ffmpeg-') && fs.existsSync(path.join(extractDir, f, 'bin', 'ffmpeg.exe')));
 
         if (ffmpegDir) {
             const extractedPath = path.join(extractDir, ffmpegDir, 'bin', 'ffmpeg.exe');
@@ -293,7 +303,7 @@ function extractWindowsWith7z() {
     execSync(`"${sevenZip}" x "${downloadPath}" -o"${extractDir}" -y`, { stdio: 'inherit' });
 
     const files = fs.readdirSync(extractDir);
-    const ffmpegDir = files.find(f => f.startsWith('ffmpeg-master') && f.includes('win64'));
+    const ffmpegDir = files.find(f => f.startsWith('ffmpeg-') && fs.existsSync(path.join(extractDir, f, 'bin', 'ffmpeg.exe')));
 
     if (ffmpegDir) {
         const extractedPath = path.join(extractDir, ffmpegDir, 'bin', 'ffmpeg.exe');

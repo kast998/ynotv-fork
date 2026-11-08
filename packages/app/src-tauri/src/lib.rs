@@ -2056,11 +2056,8 @@ async fn live_subtitles_start(
             }
             // Whisper's own --translate only outputs English, so recognise in the
             // spoken language (auto-detected) and translate to Chinese separately.
-            // Tencent first: it is reachable without a proxy and answers fast.
-            let zh = match tencent_translate(&text).await {
-                Ok(t) if !t.trim().is_empty() => t,
-                _ => google_translate_raw(&client, &text).await.unwrap_or(text),
-            };
+            // Google first (user's choice), Tencent as fallback.
+            let zh = google_translate(&client, &text).await.unwrap_or(text);
             if LIVE_SUB_GEN.load(Ordering::SeqCst) != gen {
                 break;
             }

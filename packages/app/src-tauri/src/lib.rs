@@ -7106,6 +7106,26 @@ pub fn run() {
             // commands that need DVR wait for it (see init_dvr).
             let app_handle = app.handle().clone();
 
+            // Auto-update yt-dlp on every launch (YouTube breaks old versions
+            // often). Runs in the background a few seconds after start-up; the
+            // update only swaps the binary after the new one runs, so a failed
+            // or offline check leaves the current copy untouched.
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+                for attempt in 0..2 {
+                    match update_ytdlp().await {
+                        Ok(r) => {
+                            log::info!("[yt-dlp] startup auto-update: {} {:?}", r.status, r.version);
+                            break;
+                        }
+                        Err(e) => {
+                            log::warn!("[yt-dlp] startup auto-update failed (attempt {}): {}", attempt + 1, e);
+                            tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                        }
+                    }
+                }
+            });
+
             // Run log cleanup based on user settings
             let log_cleanup_handle = app_handle.clone();
             tauri::async_runtime::spawn(async move {

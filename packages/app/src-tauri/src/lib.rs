@@ -1094,7 +1094,7 @@ async fn ytdlp_version(path: &str) -> Option<String> {
 
 /// Best-effort lookup of the latest stable yt-dlp release tag (e.g. 2026.08.19).
 async fn fetch_latest_ytdlp_version() -> Option<String> {
-    let client = reqwest::Client::new();
+    let client = ytdlp_update_client(20).await.ok()?;
     let resp = client
         .get("https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest")
         .header("User-Agent", "ynotv")
@@ -1134,10 +1134,38 @@ pub struct YoutubeItem {
     pub is_live: bool,
 }
 
+/// True while the launch-time yt-dlp update runs; yt-dlp callers wait for it
+/// (at most 90 s) so they never race the binary swap and use the fresh copy.
+static YTDLP_UPDATING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+async fn wait_ytdlp_update() {
+    for _ in 0..360 {
+        if !YTDLP_UPDATING.load(std::sync::atomic::Ordering::SeqCst) {
+            return;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+    }
+}
+
+/// HTTP client for the yt-dlp update, through the same proxy YouTube uses.
+async fn ytdlp_update_client(timeout: u64) -> Result<reqwest::Client, String> {
+    let mut b = reqwest::Client::builder()
+        .user_agent("ynotv")
+        .connect_timeout(std::time::Duration::from_secs(15))
+        .timeout(std::time::Duration::from_secs(timeout));
+    let pa = youtube_proxy_args().await;
+    if let Some(p) = pa.get(1) {
+        if let Ok(px) = reqwest::Proxy::all(p) {
+            b = b.proxy(px);
+        }
+    }
+    b.build().map_err(|e| format!("Failed to build HTTP client: {e}"))
+}
+
 /// Search YouTube (or list a channel/playlist URL) with yt-dlp's flat extractor.
 /// `query` may be plain text or a youtube.com URL.
 #[tauri::command]
 async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<YoutubeItem>, String> {
+    wait_ytdlp_update().await;
     let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
     let n = limit.unwrap_or(30).clamp(1, 2000);
     let q = query.trim();
@@ -1181,7 +1209,7 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
     {
         cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
     }
-    let out = tokio::time::timeout(std::time::Duration::from_secs(if n > 100 { 120 } else { 45 }), cmd.output())
+    let out = tokio::time::timeout(std::time::Duration::from_secs(if n > 100 || q.starts_with(":yt") { 120 } else { 60 }), cmd.output())
         .await
         .map_err(|_| "YouTube search timed out".to_string())?
         .map_err(|e| e.to_string())?;
@@ -1616,6 +1644,7 @@ async fn youtube_resolve_run(ytdl: &std::path::Path, url: &str, extra: &[String]
 /// cookies from a cookies.txt file or a signed-in browser.
 #[tauri::command]
 async fn youtube_resolve(url: String, cookies: Option<String>) -> Result<String, String> {
+    wait_ytdlp_update().await;
     let ytdl = find_ytdl_path().ok_or_else(|| "yt-dlp not found".to_string())?;
     let ytdl = std::path::PathBuf::from(ytdl);
     let mut first_err = String::new();
@@ -2652,10 +2681,7 @@ async fn update_ytdlp() -> Result<YtdlpUpdateResult, String> {
     }
 
     log::info!("[yt-dlp] Downloading latest release from {}", url);
-    let client = reqwest::Client::builder()
-        .user_agent("ynotv")
-        .build()
-        .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
+    let client = ytdlp_update_client(300).await?;
     let resp = client
         .get(url)
         .send()
@@ -2690,12 +2716,22 @@ async fn update_ytdlp() -> Result<YtdlpUpdateResult, String> {
         }
     };
 
+    // Windows can't delete a running exe but can rename it, so move the old
+    // copy aside first (cleaned up on the next update).
+    let dest_old = dir.join(format!("{}.old", dest_name));
+    let _ = tokio::fs::remove_file(&dest_old).await;
     if dest.exists() {
-        let _ = tokio::fs::remove_file(&dest).await;
+        if tokio::fs::remove_file(&dest).await.is_err() {
+            let _ = tokio::fs::rename(&dest, &dest_old).await;
+        }
     }
-    tokio::fs::rename(&dest_tmp, &dest)
-        .await
-        .map_err(|e| format!("Failed to install yt-dlp: {e}"))?;
+    if let Err(e) = tokio::fs::rename(&dest_tmp, &dest).await {
+        if !dest.exists() && dest_old.exists() {
+            let _ = tokio::fs::rename(&dest_old, &dest).await;
+        }
+        let _ = tokio::fs::remove_file(&dest_tmp).await;
+        return Err(format!("Failed to install yt-dlp: {e}"));
+    }
 
     // Dev checkout: also refresh the src-tauri/bin source sidecar so a rebuild
     // copies the updated binary instead of the stale one.
@@ -7110,8 +7146,8 @@ pub fn run() {
             // often). Runs in the background a few seconds after start-up; the
             // update only swaps the binary after the new one runs, so a failed
             // or offline check leaves the current copy untouched.
+            YTDLP_UPDATING.store(true, std::sync::atomic::Ordering::SeqCst);
             tauri::async_runtime::spawn(async move {
-                tokio::time::sleep(std::time::Duration::from_secs(4)).await;
                 for attempt in 0..2 {
                     match update_ytdlp().await {
                         Ok(r) => {
@@ -7120,10 +7156,13 @@ pub fn run() {
                         }
                         Err(e) => {
                             log::warn!("[yt-dlp] startup auto-update failed (attempt {}): {}", attempt + 1, e);
-                            tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                            if attempt == 0 {
+                                tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+                            }
                         }
                     }
                 }
+                YTDLP_UPDATING.store(false, std::sync::atomic::Ordering::SeqCst);
             });
 
             // Run log cleanup based on user settings

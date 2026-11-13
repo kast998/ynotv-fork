@@ -68,7 +68,7 @@ function describeYtError(msg: string, what: string): string {
       '若已保存过仍出现，说明登录已过期，重新登录保存一次。' +
       `\n详细信息：${msg.replace(/^BOTCHECK\|/, '').replace(/\|/g, ' ; ')}`;
   }
-  return `${what}：${msg}。先到 设置 › 关于 › yt-dlp 点更新再试。`;
+  return `${what}：${msg}。yt-dlp 每次启动会自动更新；如果反复超时，多半是网络或代理太慢。`;
 }
 
 const FEEDS = [
@@ -152,7 +152,15 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
     setError(null);
     setLastQuery(FEEDS.find((f) => f.key === kind)?.label ?? kind);
     try {
-      const res = await invoke<YoutubeItem[]>('youtube_search', { query: kind, limit: kind === ':ytsubs' ? 300 : 100 });
+      const lim = kind === ':ytsubs' ? 300 : 60;
+      let res: YoutubeItem[];
+      try {
+        res = await invoke<YoutubeItem[]>('youtube_search', { query: kind, limit: lim });
+      } catch (e1) {
+        // first call after launch can be slow (cold yt-dlp, fresh update); retry once
+        if (!String(e1).includes('timed out')) throw e1;
+        res = await invoke<YoutubeItem[]>('youtube_search', { query: kind, limit: lim });
+      }
       setItems(res);
       if (res.length === 0 && !quiet) setError('这里暂时没有内容');
     } catch (e) {

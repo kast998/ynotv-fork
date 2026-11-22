@@ -4882,6 +4882,7 @@ function useTmdbPresencePoster(
   // though the failover primary is the stream that's actually playing. Stricter
   // than remoteViewChannel: only follows the anchor while it's still in the
   // current category, so switching categories falls back to the playing channel.
+  const videoClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const guideHighlightChannel = useMemo(() => {
     if (
       failoverKeepViewSetting &&
@@ -6397,11 +6398,27 @@ function useTmdbPresencePoster(
         <div
           className="video-doubleclick-overlay"
           onClick={(e) => {
-            if (e.button === 0 && overlayOnClickOnly && playing) {
+            if (e.button !== 0) return;
+            // On-demand video (YouTube, TVBox movies): a single click toggles
+            // pause like a web player. Wait briefly so a double-click
+            // (fullscreen) does not also pause.
+            if (currentChannel?.stream_id === 'vod') {
+              if (videoClickTimerRef.current) clearTimeout(videoClickTimerRef.current);
+              videoClickTimerRef.current = setTimeout(() => {
+                videoClickTimerRef.current = null;
+                void handleTogglePlay();
+              }, 250);
+              return;
+            }
+            if (overlayOnClickOnly && playing) {
               setShowControls((prev) => !prev);
             }
           }}
           onDoubleClick={() => {
+            if (videoClickTimerRef.current) {
+              clearTimeout(videoClickTimerRef.current);
+              videoClickTimerRef.current = null;
+            }
             handleToggleFullscreen();
           }}
           onContextMenu={(e) => {

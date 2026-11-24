@@ -1601,14 +1601,130 @@ const YT_FMT_REPLAY: &str = "bv*[height<=1080][protocol^=http]+ba[protocol^=http
 async fn youtube_resolve_run(ytdl: &std::path::Path, url: &str, extra: &[String], js: &[String]) -> Result<String, String> {
     let (status, first) = youtube_resolve_fmt(ytdl, url, extra, js, YT_FMT_HLS).await?;
     let replay = status == "was_live" || status == "post_live";
-    if replay && first.contains("m3u8") {
-        // Fall back to the HLS result when the replay has no plain files yet
-        // (a post_live video YouTube is still processing).
+    let is_hls = first.contains("m3u8") || first.contains("hls_playlist") || first.contains("hls_variant");
+    if replay && is_hls {
+        // 1) Same HLS, re-served locally as a finished (VOD) playlist: starts
+        //    at 0:00 and seeks, no PO token needed.
+        match youtube_hls_as_vod(&first).await {
+            Ok(u) => return Ok(u),
+            Err(e) => eprintln!("[youtube] replay HLS->VOD failed: {e}"),
+        }
+        // 2) Plain DASH/progressive files.
         if let Ok((_, u)) = youtube_resolve_fmt(ytdl, url, extra, js, YT_FMT_REPLAY).await {
             return Ok(u);
         }
     }
     Ok(first)
+}
+
+/// YouTube serves a replay of an ended livestream as a live HLS playlist with
+/// no #EXT-X-ENDLIST, so ffmpeg/mpv open it at the live edge (the very end)
+/// and refuse to seek. Fetch the media playlist, mark it finished (VOD), and
+/// serve it from 127.0.0.1 so the player sees an ordinary seekable video.
+async fn youtube_hls_as_vod(manifest: &str) -> Result<String, String> {
+    let client = ytdlp_update_client(30).await?;
+    let get = |u: String| {
+        let c = client.clone();
+        async move {
+            let r = c.get(&u).send().await.map_err(|e| e.to_string())?;
+            if !r.status().is_success() {
+                return Err(format!("HTTP {}", r.status()));
+            }
+            r.text().await.map_err(|e| e.to_string())
+        }
+    };
+    let join = |base: &str, rel: &str| -> String {
+        if rel.starts_with("http") {
+            return rel.to_string();
+        }
+        url::Url::parse(base).and_then(|b| b.join(rel)).map(|u| u.to_string()).unwrap_or_else(|_| rel.to_string())
+    };
+    let mut base = manifest.to_string();
+    let mut text = get(base.clone()).await?;
+    if text.contains("#EXT-X-STREAM-INF") {
+        // Master playlist: pick the best variant at or under 1080p.
+        let lines: Vec<&str> = text.lines().collect();
+        let mut best: Option<(u64, u64, String)> = None; // (fits, bandwidth, uri)
+        for i in 0..lines.len() {
+            let l = lines[i];
+            if !l.starts_with("#EXT-X-STREAM-INF") {
+                continue;
+            }
+            let uri = match lines[i + 1..].iter().find(|x| !x.trim().is_empty() && !x.starts_with('#')) {
+                Some(u) => u.trim().to_string(),
+                None => continue,
+            };
+            let attr = |k: &str| -> Option<String> {
+                l.split(&format!("{k}=")).nth(1).map(|v| v.split(',').next().unwrap_or("").trim_matches('"').to_string())
+            };
+            let bw = attr("BANDWIDTH").and_then(|v| v.parse().ok()).unwrap_or(0u64);
+            let h = attr("RESOLUTION").and_then(|v| v.split('x').nth(1).and_then(|x| x.parse().ok())).unwrap_or(0u64);
+            let fits = if h <= 1080 { 1 } else { 0 };
+            if best.as_ref().map_or(true, |b| (fits, bw) > (b.0, b.1)) {
+                best = Some((fits, bw, uri));
+            }
+        }
+        let (_, _, uri) = best.ok_or("no HLS variant")?;
+        base = join(&base, &uri);
+        text = get(base.clone()).await?;
+    }
+    if !text.contains("#EXTINF") {
+        return Err("not a media playlist".into());
+    }
+    let mut out = String::with_capacity(text.len() + 64);
+    for l in text.lines() {
+        let t = l.trim();
+        if t.starts_with("#EXT-X-PLAYLIST-TYPE") || t == "#EXT-X-ENDLIST" {
+            continue;
+        }
+        if !t.is_empty() && !t.starts_with('#') {
+            out.push_str(&join(&base, t));
+        } else if t.starts_with("#EXT-X-MAP") && t.contains("URI=\"") {
+            // Absolute init-segment URI.
+            let pre = t.split("URI=\"").next().unwrap_or("");
+            let rest = t.split("URI=\"").nth(1).unwrap_or("");
+            let u = rest.split('"').next().unwrap_or("");
+            let post = &rest[u.len()..];
+            out.push_str(&format!("{pre}URI=\"{}{post}", join(&base, u)));
+        } else {
+            out.push_str(t);
+        }
+        out.push('\n');
+        if t == "#EXTM3U" {
+            out.push_str("#EXT-X-PLAYLIST-TYPE:VOD\n");
+        }
+    }
+    out.push_str("#EXT-X-ENDLIST\n");
+
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.map_err(|e| e.to_string())?;
+    let port = listener.local_addr().map_err(|e| e.to_string())?.port();
+    let body = std::sync::Arc::new(out.into_bytes());
+    tokio::spawn(async move {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        // Serve for up to 8 hours (the segment URLs expire around then anyway).
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(8 * 3600);
+        loop {
+            let acc = tokio::time::timeout_at(deadline, listener.accept()).await;
+            let (mut sock, _) = match acc {
+                Ok(Ok(x)) => x,
+                Ok(Err(_)) => continue,
+                Err(_) => break,
+            };
+            let body = body.clone();
+            tokio::spawn(async move {
+                let mut buf = [0u8; 4096];
+                let _ = tokio::time::timeout(std::time::Duration::from_secs(5), sock.read(&mut buf)).await;
+                let head = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/vnd.apple.mpegurl\r\nContent-Length: {}\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n",
+                    body.len()
+                );
+                let _ = sock.write_all(head.as_bytes()).await;
+                let _ = sock.write_all(&body).await;
+                let _ = sock.shutdown().await;
+            });
+        }
+    });
+    Ok(format!("http://127.0.0.1:{port}/replay.m3u8"))
 }
 
 async fn youtube_resolve_fmt(ytdl: &std::path::Path, url: &str, extra: &[String], js: &[String], fmt: &str) -> Result<(String, String), String> {

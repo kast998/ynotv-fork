@@ -1589,13 +1589,38 @@ async fn youtube_resolve_once(ytdl: &std::path::Path, url: &str, extra: &[String
     }
 }
 
+/// Format order for a normal video or a running live stream: YouTube's HLS
+/// manifest first (muxed, works in every player mode).
+const YT_FMT_HLS: &str = "b[protocol^=m3u8][height<=1080]/b[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bv*[height<=1080]+ba/bv*+ba/b";
+/// Format order for a replay of an ended live stream (was_live / post_live):
+/// its HLS manifest is a live DVR playlist, so mpv opens it at the live edge
+/// (the very end) and sits there waiting for segments that never come.
+/// Use the plain DASH/progressive files instead, which start at 0:00.
+const YT_FMT_REPLAY: &str = "bv*[height<=1080][protocol^=http]+ba[protocol^=http]/b[protocol^=http][vcodec!=none][acodec!=none]/bv*[protocol^=http]+ba[protocol^=http]";
+
 async fn youtube_resolve_run(ytdl: &std::path::Path, url: &str, extra: &[String], js: &[String]) -> Result<String, String> {
+    let (status, first) = youtube_resolve_fmt(ytdl, url, extra, js, YT_FMT_HLS).await?;
+    let replay = status == "was_live" || status == "post_live";
+    if replay && first.contains("m3u8") {
+        // Fall back to the HLS result when the replay has no plain files yet
+        // (a post_live video YouTube is still processing).
+        if let Ok((_, u)) = youtube_resolve_fmt(ytdl, url, extra, js, YT_FMT_REPLAY).await {
+            return Ok(u);
+        }
+    }
+    Ok(first)
+}
+
+async fn youtube_resolve_fmt(ytdl: &std::path::Path, url: &str, extra: &[String], js: &[String], fmt: &str) -> Result<(String, String), String> {
     let mut cmd = tokio::process::Command::new(ytdl);
-    cmd.arg("-g")
+    cmd.arg("--print")
+        .arg("live_status")
+        .arg("--print")
+        .arg("urls")
         .arg("--no-warnings")
         .arg("--no-playlist")
         .arg("-f")
-        .arg("b[protocol^=m3u8][height<=1080]/b[protocol^=m3u8]/b[vcodec!=none][acodec!=none]/bv*[height<=1080]+ba/bv*+ba/b");
+        .arg(fmt);
     for e in extra {
         cmd.arg(e);
     }
@@ -1625,15 +1650,21 @@ async fn youtube_resolve_run(ytdl: &std::path::Path, url: &str, extra: &[String]
             .to_string());
     }
     let stdout = String::from_utf8_lossy(&out.stdout);
+    let status = stdout
+        .lines()
+        .map(|l| l.trim())
+        .find(|l| !l.is_empty() && !l.starts_with("http"))
+        .unwrap_or("")
+        .to_string();
     let urls: Vec<&str> = stdout.lines().map(|l| l.trim()).filter(|l| l.starts_with("http")).collect();
     match urls.len() {
         0 => Err("yt-dlp returned no stream URL".to_string()),
-        1 => Ok(urls[0].to_string()),
+        1 => Ok((status, urls[0].to_string())),
         // Separate video + audio (DASH only): combine them for mpv with an EDL,
         // the same way mpv's own ytdl hook does.
         _ => {
             let part = |u: &str| format!("!no_clip;!no_chapters;%{}%{}", u.len(), u);
-            Ok(format!("edl://{};!new_stream;{}", part(urls[0]), part(urls[1])))
+            Ok((status, format!("edl://{};!new_stream;{}", part(urls[0]), part(urls[1]))))
         }
     }
 }

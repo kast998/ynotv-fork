@@ -45,6 +45,13 @@ function formatSeekTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// Wall-clock time (HH:MM:SS) of a position inside the live DVR window.
+// Anchored the same way as the right-hand label: playhead = now - behindLive.
+function dvrClock(ts: { timePos: number; behindLive: number }, pos: number): string {
+  const ms = Date.now() - (ts.behindLive + (ts.timePos - pos)) * 1000;
+  return new Date(ms).toLocaleTimeString('zh-CN', { hour12: false });
+}
+
 const ALPHABET_LETTERS = ['#', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
 const RESOLUTION_FILTER_OPTIONS: QualityFilter[] = ['all', '4k', 'fhd', 'hd', 'sd'];
@@ -3105,7 +3112,7 @@ export function ChannelPanel({
           {showSeek && (
             <div className="guide-minibar-seek-row">
               <span className="guide-minibar-seek-time">
-                {formatSeekTime(ts ? ts.timePos - ts.cacheStart : (isVod ? 0 : 0))}
+                {ts ? dvrClock(ts, ts.cacheStart) : formatSeekTime(0)}
               </span>
               <div
                 ref={seekBarRef}
@@ -3118,7 +3125,7 @@ export function ChannelPanel({
                 <div className="guide-minibar-seek-fill" style={{ width: `${seekFillPct}%` }} />
                 {seekHover && !seekDrag && (
                   <div className="guide-minibar-seek-tip" style={{ left: `${((hoverPos - (ts ? ts.cacheStart : 0)) / (ts ? ts.cachedDuration : 1)) * 100}%` }}>
-                    {formatSeekTime(hoverPos)}
+                    {ts ? dvrClock(ts, hoverPos) : formatSeekTime(hoverPos)}
                   </div>
                 )}
               </div>

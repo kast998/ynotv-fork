@@ -110,6 +110,17 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// Wall-clock time (HH:MM:SS) of a position in the live DVR window; playhead = now - behindLive.
+function dvrClock(ts: { timePos: number; behindLive: number }, pos: number): string {
+  const ms = Date.now() - (ts.behindLive + (ts.timePos - pos)) * 1000;
+  return new Date(ms).toLocaleTimeString('zh-CN', { hour12: false });
+}
+
+// "-12:34" behind live, for the label next to the LIVE badge.
+function behindText(sec: number): string {
+  return sec >= 5 ? `-${formatTime(sec)}` : 'LIVE';
+}
+
 export function NowPlayingBar({
   visible,
   channel,
@@ -741,7 +752,7 @@ export function NowPlayingBar({
                   {isVod || isCatchup
                     ? formatTime(position)
                     : timeshiftState
-                    ? formatTime(timeshiftState.timePos - timeshiftState.cacheStart)
+                    ? dvrClock(timeshiftState, timeshiftState.timePos)
                     : (position > 0 ? formatTime(position) : '0:00')}
                 </span>
 
@@ -780,7 +791,7 @@ export function NowPlayingBar({
                           : (hoverPosition / (duration || 1)) * 100}%`
                       }}
                     >
-                      {formatTime(!isVod && !isCatchup && (timeshiftEnabled || timeshiftState?.nativeDash) && timeshiftState && timeshiftState.cachedDuration > 1 ? hoverPosition - timeshiftState.cacheStart : hoverPosition)}
+                      {!isVod && !isCatchup && (timeshiftEnabled || timeshiftState?.nativeDash) && timeshiftState && timeshiftState.cachedDuration > 1 ? dvrClock(timeshiftState, hoverPosition) : formatTime(hoverPosition)}
                     </div>
                   )}
                 </div>
@@ -789,7 +800,7 @@ export function NowPlayingBar({
                   {isVod || isCatchup
                     ? formatTime(position)
                     : timeshiftState
-                    ? (timeshiftState.behindLive < 5 ? 'LIVE' : 'LIVE')
+                    ? behindText(timeshiftState.behindLive)
                     : (liveClock || 'LIVE')}
                 </span>
               </div>
@@ -850,7 +861,7 @@ export function NowPlayingBar({
                         </span>
                       )}
                       <span className="npb-clean-behind-text">
-                        'LIVE'
+                        {behindText(timeshiftState.behindLive)}
                       </span>
                     </div>
                   ) : (
@@ -1325,7 +1336,7 @@ export function NowPlayingBar({
 
                       return (
                         <>
-                          <span className="npb-time-elapsed">{formatTime(timePos - cacheStart)}</span>
+                          <span className="npb-time-elapsed">{dvrClock(timeshiftState, timePos)}</span>
                           <div className="npb-ts-container">
                             <div
                               ref={progressBarRef}
@@ -1342,7 +1353,7 @@ export function NowPlayingBar({
                                   className="npb-time-tooltip"
                                   style={{ left: `${((hoverPosition - cacheStart) / cachedDuration) * 100}%` }}
                                 >
-                                  {formatTime(hoverPosition - cacheStart)}
+                                  {dvrClock(timeshiftState, hoverPosition)}
                                 </div>
                               )}
                               {/* Live edge marker */}
@@ -1363,7 +1374,7 @@ export function NowPlayingBar({
                               {isLive ? (
                                 <span className="npb-live-badge">● LIVE</span>
                               ) : (
-                                <span className="npb-behind-live">LIVE</span>
+                                <span className="npb-behind-live">{behindText(behindLive)}</span>
                               )}
                             </div>
                           </div>

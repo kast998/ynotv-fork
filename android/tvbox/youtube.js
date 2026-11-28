@@ -143,7 +143,7 @@ function createSpider(site = {}) {
             vod_pic: pic.split("?")[0],
             vod_remarks: remark,
             vod_director: owner,
-            style: {type: "list"},
+            style: {type: "rect", ratio: 1.78},
         };
     }
 

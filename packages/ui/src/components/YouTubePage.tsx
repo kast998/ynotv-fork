@@ -19,6 +19,7 @@ interface YoutubeItem {
   duration?: number | null;
   thumbnail?: string | null;
   viewCount?: number | null;
+  timestamp?: number | null;
   isLive: boolean;
 }
 
@@ -60,6 +61,17 @@ function fmtViews(n?: number | null): string {
   if (n >= 1e8) return `${(n / 1e8).toFixed(1)}亿次观看`;
   if (n >= 1e4) return `${(n / 1e4).toFixed(1)}万次观看`;
   return `${n}次观看`;
+}
+
+function fmtAgo(ts?: number | null): string {
+  if (!ts) return '';
+  const d = Math.max(0, Date.now() / 1000 - ts);
+  if (d < 3600) return `${Math.max(1, Math.floor(d / 60))}分钟前`;
+  if (d < 86400) return `${Math.floor(d / 3600)}小时前`;
+  if (d < 86400 * 7) return `${Math.floor(d / 86400)}天前`;
+  if (d < 86400 * 30) return `${Math.floor(d / 86400 / 7)}周前`;
+  if (d < 86400 * 365) return `${Math.floor(d / 86400 / 30)}个月前`;
+  return `${Math.floor(d / 86400 / 365)}年前`;
 }
 
 function describeYtError(msg: string, what: string): string {
@@ -400,9 +412,11 @@ export function YouTubePage({ onPlay, onClose }: YouTubePageProps) {
                   ? <span className="youtube-badge youtube-badge--live">直播</span>
                   : it.duration ? <span className="youtube-badge">{fmtDuration(it.duration)}</span> : null}
               </div>
-              <div className="youtube-title" title={it.title}>{resolving === it.id ? '解析中… ' : ''}{it.title}</div>
-              <div className="youtube-meta">
-                {[it.channel, fmtViews(it.viewCount)].filter(Boolean).join(' · ')}
+              <div className="youtube-info">
+                <div className="youtube-title" title={it.title}>{resolving === it.id ? '解析中… ' : ''}{it.title}</div>
+                <div className="youtube-meta">
+                  {[it.channel, fmtViews(it.viewCount), fmtAgo(it.timestamp)].filter(Boolean).join(' · ')}
+                </div>
               </div>
             </button>
           ))}

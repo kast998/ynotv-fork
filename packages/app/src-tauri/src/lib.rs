@@ -1121,6 +1121,23 @@ fn ytdlp_download_url() -> Option<&'static str> {
 
 // ── YouTube search (via bundled yt-dlp) ────────────────────────────────────
 
+/// "YYYYMMDD" -> Unix seconds at 00:00 UTC (days-from-civil, no chrono dependency).
+fn chrono_like_ymd(d: &str) -> Option<i64> {
+    if d.len() != 8 {
+        return None;
+    }
+    let y: i64 = d[0..4].parse().ok()?;
+    let m: i64 = d[4..6].parse().ok()?;
+    let day: i64 = d[6..8].parse().ok()?;
+    let y2 = if m <= 2 { y - 1 } else { y };
+    let era = (if y2 >= 0 { y2 } else { y2 - 399 }) / 400;
+    let yoe = y2 - era * 400;
+    let mp = (m + 9) % 12;
+    let doy = (153 * mp + 2) / 5 + day - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    Some((era * 146097 + doe - 719468) * 86400)
+}
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct YoutubeItem {
@@ -1131,6 +1148,7 @@ pub struct YoutubeItem {
     pub duration: Option<f64>,
     pub thumbnail: Option<String>,
     pub view_count: Option<u64>,
+    pub timestamp: Option<i64>,
     pub is_live: bool,
 }
 
@@ -1179,6 +1197,8 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
     };
     let mut cmd = tokio::process::Command::new(ytdl);
     cmd.arg("--flat-playlist")
+        .arg("--extractor-args")
+        .arg("youtubetab:approximate_date")
         .arg("-J")
         .arg("--no-warnings")
         .arg("--playlist-end")
@@ -1252,6 +1272,14 @@ async fn youtube_search(query: String, limit: Option<u32>) -> Result<Vec<Youtube
                 .map(|s| s.to_string()),
             duration: e.get("duration").and_then(|x| x.as_f64()),
             view_count: e.get("view_count").and_then(|x| x.as_u64()),
+            timestamp: e
+                .get("timestamp")
+                .and_then(|x| x.as_i64().or_else(|| x.as_f64().map(|f| f as i64)))
+                .or_else(|| {
+                    e.get("upload_date").and_then(|x| x.as_str()).and_then(|d| {
+                        chrono_like_ymd(d)
+                    })
+                }),
             is_live: live == "is_live" || e.get("is_live").and_then(|x| x.as_bool()).unwrap_or(false),
             thumbnail,
             url,

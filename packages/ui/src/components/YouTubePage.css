@@ -26,9 +26,9 @@
 }
 
 .youtube-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .youtube-card {
@@ -39,8 +39,10 @@
   padding: 0;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
 }
 
 .youtube-card:hover .youtube-thumb {
@@ -49,6 +51,9 @@
 
 .youtube-thumb-wrap {
   position: relative;
+  flex: 0 0 360px;
+  width: 360px;
+  max-width: 45%;
   aspect-ratio: 16 / 9;
   border-radius: 10px;
   overflow: hidden;
@@ -82,18 +87,29 @@
   background: #cc0000;
 }
 
+.youtube-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
 .youtube-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-word;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .youtube-meta {
-  font-size: 12px;
+  font-size: 13px;
   opacity: 0.65;
 }
 

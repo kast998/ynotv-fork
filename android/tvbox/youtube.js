@@ -106,7 +106,15 @@ function createSpider(site = {}) {
         const sources = l.contentImage?.thumbnailViewModel?.image?.sources || [];
         const owner = meta.metadata?.contentMetadataViewModel?.metadataRows?.[0]?.metadataParts?.[0]?.text?.content || "";
         const badge = findText(l.contentImage, "thumbnailBadgeViewModel");
+        let published = "";
+        for (const row of meta.metadata?.contentMetadataViewModel?.metadataRows || []) {
+            for (const part of row.metadataParts || []) {
+                const t = part.text?.content || "";
+                if (/前|ago|直播|串流|Streamed|premiere|首播/i.test(t)) published = t;
+            }
+        }
         return {
+            publishedTimeText: published ? {simpleText: published} : null,
             videoId: l.contentId,
             title: {simpleText: meta.title?.content || ""},
             thumbnail: {thumbnails: sources},
@@ -127,13 +135,15 @@ function createSpider(site = {}) {
         const pic = thumbs.length ? thumbs[thumbs.length - 1].url : `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg`;
         const len = text(v.lengthText);
         const owner = text(v.ownerText) || text(v.longBylineText);
+        const when = text(v.publishedTimeText);
+        const remark = [len || "直播", when, owner].filter(Boolean).join(" · ");
         return {
             vod_id: `https://www.youtube.com/watch?v=${v.videoId}`,
             vod_name: text(v.title),
             vod_pic: pic.split("?")[0],
-            vod_remarks: len || "直播",
+            vod_remarks: remark,
             vod_director: owner,
-            style: {type: "rect", ratio: 1.78},
+            style: {type: "list"},
         };
     }
 
